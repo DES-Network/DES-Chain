@@ -377,20 +377,3 @@ func decodePrealloc(data string) GenesisAlloc {
 	}
 	return ga
 }
-
-// des - begin
-// generateContractAddress will take the address of the sender and the nonce and 
-// pre-determine the address of contracts
-func generateContractAddress(addr string, nonce uint) string {
-	addr := common.HexToAddress(addr)
-    stuff := make([]interface{}, 0)
-    stuff = append(stuff, addr.Bytes())
-    stuff = append(stuff, nonce)
-    bytes, err := EncodeToBytes(stuff)
-    if err != nil {
-        panic(err)
-    }
-    fmt.Printf("%v → %X\n", addr.String(), crypto.Keccak256(bytes)[12:])
-	return "0x" + crypto.Keccak256Hash(bytes).Hex()[26:]
-}
-// des - end
