@@ -63,7 +63,7 @@ type PublicEthereumAPI struct {
 
 // NewPublicEthereumAPI creates a new Ethereum protocol API.
 func NewPublicEthereumAPI(b Backend) *PublicEthereumAPI {
-	return &PublicEthereumAPI{b}
+	return &PublicEthereumAPI{b: b}
 }
 
 // GasPrice returns a suggestion for a gas price.
@@ -209,15 +209,21 @@ func (s *PublicAccountAPI) Accounts() []common.Address {
 type PrivateAccountAPI struct {
 	am        *accounts.Manager
 	nonceLock *AddrLocker
+	p *private.RegulatorClient // DES
 	b         Backend
 }
 
 // NewPrivateAccountAPI create a new PrivateAccountAPI.
 func NewPrivateAccountAPI(b Backend, nonceLock *AddrLocker) *PrivateAccountAPI {
+	p, err := private.NewRegulatorClient()
+	if err != nil {
+		log.Warn("Error procuring regulator client", "error", err)
+	}
 	return &PrivateAccountAPI{
 		am:        b.AccountManager(),
 		nonceLock: nonceLock,
 		b:         b,
+		p: p,
 	}
 }
 
@@ -363,6 +369,14 @@ func (s *PrivateAccountAPI) SendTransaction(ctx context.Context, args SendTxArgs
 	isPrivate := args.PrivateFor != nil
 	if isPrivate {
 		log.Info("sending private tx", "data", fmt.Sprintf("%x", data), "privatefrom", args.PrivateFrom, "privatefor", args.PrivateFor)
+		// DES - begin
+		regulatorPresent, err := s.p.IsRegulatorPresent(args.PrivateFor)
+		if err != nil {
+			return common.Hash{}, err
+		} else if !regulatorPresent {
+			return common.Hash{}, private.ErrNoRegulator
+		}
+		// DES - end
 		data, err = private.P.Send(data, args.PrivateFrom, args.PrivateFor)
 		log.Info("sent private tx", "data", fmt.Sprintf("%x", data), "privatefrom", args.PrivateFrom, "privatefor", args.PrivateFor)
 		if err != nil {
@@ -900,12 +914,17 @@ func newRPCTransactionFromBlockHash(b *types.Block, hash common.Hash) *RPCTransa
 // PublicTransactionPoolAPI exposes methods for the RPC interface
 type PublicTransactionPoolAPI struct {
 	b         Backend
+	p         *private.RegulatorClient
 	nonceLock *AddrLocker
 }
 
 // NewPublicTransactionPoolAPI creates a new RPC service with methods specific for the transaction pool.
 func NewPublicTransactionPoolAPI(b Backend, nonceLock *AddrLocker) *PublicTransactionPoolAPI {
-	return &PublicTransactionPoolAPI{b, nonceLock}
+	p, err := private.NewRegulatorClient()
+	if err != nil {
+		log.Warn("Error procuring regulator client", "error", err)
+	}
+	return &PublicTransactionPoolAPI{b, p, nonceLock}
 }
 
 // GetBlockTransactionCountByNumber returns the number of transactions in the block with the given block number.
@@ -1153,6 +1172,14 @@ func (s *PublicTransactionPoolAPI) SendTransaction(ctx context.Context, args Sen
 
 	if isPrivate {
 		log.Info("sending private tx", "data", fmt.Sprintf("%x", data), "privatefrom", args.PrivateFrom, "privatefor", args.PrivateFor)
+		// DES - begin
+		regulatorPresent, err := s.p.IsRegulatorPresent(args.PrivateFor)
+		if err != nil {
+			return common.Hash{}, err
+		} else if !regulatorPresent {
+			return common.Hash{}, private.ErrNoRegulator
+		}
+		// DES - end
 		data, err = private.P.Send(data, args.PrivateFrom, args.PrivateFor)
 		log.Info("sent private tx", "data", fmt.Sprintf("%x", data), "privatefrom", args.PrivateFrom, "privatefor", args.PrivateFor)
 		if err != nil {
@@ -1281,7 +1308,7 @@ func (s *PublicTransactionPoolAPI) Resend(ctx context.Context, sendArgs SendTxAr
 	if err != nil {
 		return common.Hash{}, err
 	}
-
+	
 	for _, p := range pending {
 		var signer types.Signer = types.HomesteadSigner{}
 		if p.Protected() && !p.IsPrivate() {

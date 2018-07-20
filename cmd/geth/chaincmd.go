@@ -20,6 +20,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"os"
 	"runtime"
 	"strconv"
@@ -161,6 +162,8 @@ func getIsQuorum(file io.Reader) bool {
 
 // initGenesis will initialise the given JSON format genesis file and writes it as
 // the zero'd block (i.e. genesis) or will fail hard if it can't succeed.
+// EDITED: for des, we have added logic to write out the genesis header to file for
+// further processing (hardcoding the genesis)
 func initGenesis(ctx *cli.Context) error {
 	// Make sure we have a valid genesis JSON
 	genesisPath := ctx.Args().First()
@@ -181,7 +184,7 @@ func initGenesis(ctx *cli.Context) error {
 	file.Seek(0, 0)
 	genesis.Config.IsQuorum = getIsQuorum(file)
 
-	// Open an initialise both full and light databases
+	// Open and initialise both full and light databases
 	stack := makeFullNode(ctx)
 	for _, name := range []string{"chaindata", "lightchaindata"} {
 		chaindb, err := stack.OpenDatabase(name, 0, 0)
@@ -192,6 +195,22 @@ func initGenesis(ctx *cli.Context) error {
 		if err != nil {
 			utils.Fatalf("Failed to write genesis block: %v", err)
 		}
+
+		// DES - begin
+		// add a second path for writing out genesis
+		outPath := ctx.Args().Get(1)
+		if outPath == "" {
+			outPath = "des-header.json"
+		}
+
+		header := core.GetHeader(chaindb, hash, 0)
+		bytes, err := header.MarshalJSON()
+		err = ioutil.WriteFile(outPath, bytes, 0644)
+		if err != nil {
+			utils.Fatalf("%v: %v\n", "Couldn't write to file", outPath)
+		}
+		// DES - end
+
 		log.Info("Successfully wrote genesis state", "database", name, "hash", hash)
 	}
 	return nil
