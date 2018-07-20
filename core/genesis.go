@@ -366,6 +366,24 @@ func DevGenesisBlock() *Genesis {
 	}
 }
 
+
+// DES - begin
+
+// DefaultDesGenesisBlock returns the 'geth --des' genesis block.
+func DefaultDesGenesisBlock() *Genesis {
+	return &Genesis{
+		Config:     params.DESChainConfig,
+		Nonce:      42,
+		Timestamp: 1531567933,
+		ExtraData:  hexutil.MustDecode("0x307831393332633438623262663831303262613333623461366235343563333232333665333432663334"),
+		GasLimit: 3758096384,
+		Mixhash: common.HexToHash("0x00000000000000000000000000000000000000647572616c65787365646c6578"),
+		Alloc:      decodePrealloc(desAllocData),
+	}
+}
+
+// DES - end
+
 func decodePrealloc(data string) GenesisAlloc {
 	var p []struct{ Addr, Balance *big.Int }
 	if err := rlp.NewStream(strings.NewReader(data), 0).Decode(&p); err != nil {
