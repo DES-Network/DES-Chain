@@ -1,22 +1,25 @@
 package private
 
 import (
+	"context"
 	"errors"
-	"sync"
+	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"os"
+	"sync"
+	// "time"
 
 	"github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/contracts/regulators"
 	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/ethereum/go-ethereum/log"
-	"github.com/ethereum/go-ethereum/contracts/regulators"
 )
 
 var (
-	RegContractAddress = common.HexToAddress("0x314159265dD8dbb310642f98f50C066173C1259b")
-	ErrNoRegulator = errors.New("invalid transaction because no regulator provided")
-	once           sync.Once
-	client *ethclient.Client
+	RegContractAddress = common.HexToAddress("0x1932c48b2bF8102Ba33B4A6B545C32236e342f34")
+	ErrNoRegulator     = errors.New("invalid transaction because no regulator provided")
+	once               sync.Once
+	// client             *ethclient.Client
 	ipc = os.Getenv("IPC")
 )
 
@@ -25,23 +28,23 @@ type RegulatorClient struct {
 	contract *regulators.Regulators
 	client   *ethclient.Client
 	events   chan types.Log
-	regMap	 map[string]bool
+	regMap   map[string]bool
 }
 
-func getClient() (*ethclient.Client) {
+func getClient() (client *ethclient.Client) {
 	once.Do(func() {
 		if ipc != "" {
-		client, err := ethclient.Dial(ipc)
-		if err != nil {
-			log.Error("Failed to connect Ethereum client", "error", err.Error())
+			client, err := ethclient.Dial(ipc)
+			if err != nil {
+				log.Error("Failed to connect Ethereum client:", "error", err.Error())
+			} else {
+				log.Trace("Client successfully created: ", "client", client)
+			}
 		} else {
-			log.Trace("Client successfully created: ", client)
+			log.Error("Failure to get client since IPC url is not set in the environment.")
 		}
-	} else {
-		log.Error("Failure to get client since IPC url is not set in the environment.")
-	}
 	})
-	return client
+	return
 }
 
 // NewRegulatorClient initializes returns the regulator client
@@ -49,7 +52,7 @@ func NewRegulatorClient() (*RegulatorClient, error) {
 	//TODO: add check for genesis in association with contract address
 	contract, err := regulators.NewRegulators(RegContractAddress, getClient())
 	if err != nil {
-		log.Error("%v", err)
+		log.Error("Failed to create a Regulator Client", "error", err)
 		return nil, err
 	}
 	return &RegulatorClient{client: getClient(), regMap: make(map[string]bool), contract: contract}, nil
@@ -59,13 +62,23 @@ func NewRegulatorClient() (*RegulatorClient, error) {
 func (r *RegulatorClient) IsRegulatorPresent(privateFor []string) (bool, error) {
 	isPresent := false
 	var err error
+	if r.client == nil {
+		client, err := ethclient.Dial(ipc)
+		contract, err := regulators.NewRegulators(RegContractAddress, client)
+		if err != nil {
+			log.Error("Failed to communicate with regulator contract", "error", err)
+			return isPresent, nil
+		}
+		r.contract = contract
+		r.client = client
+	}
 	for i := range privateFor {
 		if isPresent = r.regMap[privateFor[i]]; isPresent {
 			break
 		}
-		isPresent, err = r.contract.Exists(nil, privateFor[i])
+		isPresent, err = r.contract.Exists(&bind.CallOpts{Context: context.TODO()}, privateFor[i])
 		if err != nil {
-			log.Error("%v: %v\n", "Couldn't communicate with regulator contract with the following error", err)
+			log.Error("Couldn't communicate with regulator contract", "error", err)
 			break
 		} else if isPresent {
 			r.regMap[privateFor[i]] = true
