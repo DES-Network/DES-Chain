@@ -374,6 +374,7 @@ func (s *PrivateAccountAPI) SendTransaction(ctx context.Context, args SendTxArgs
 		if err != nil {
 			return common.Hash{}, err
 		} else if !regulatorPresent {
+			log.Error("Transaction failed", "error", private.ErrNoRegulator)
 			return common.Hash{}, private.ErrNoRegulator
 		}
 		// DES - end
@@ -1177,6 +1178,7 @@ func (s *PublicTransactionPoolAPI) SendTransaction(ctx context.Context, args Sen
 		if err != nil {
 			return common.Hash{}, err
 		} else if !regulatorPresent {
+			log.Error("Transaction failed", "error", private.ErrNoRegulator)
 			return common.Hash{}, private.ErrNoRegulator
 		}
 		// DES - end
