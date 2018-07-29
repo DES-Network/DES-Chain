@@ -1172,6 +1172,7 @@ func (s *PublicTransactionPoolAPI) SendTransaction(ctx context.Context, args Sen
 	isPrivate := args.PrivateFor != nil
 
 	if isPrivate {
+		//Send private transaction to local Constellation node
 		log.Info("sending private tx", "data", fmt.Sprintf("%x", data), "privatefrom", args.PrivateFrom, "privatefor", args.PrivateFor)
 		// DES - begin
 		regulatorPresent, err := s.p.IsRegulatorPresent(args.PrivateFor)
