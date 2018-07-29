@@ -9,12 +9,12 @@ import (
 	// "time"
 
 	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/contracts/regulators"
+	"github.com/ethereum/go-ethereum/contracts/des"
 	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/ethereum/go-ethereum/log"
 )
-
+// TODO: rename
 var (
 	RegContractAddress = common.HexToAddress("0x1932c48b2bF8102Ba33B4A6B545C32236e342f34")
 	ErrNoRegulator     = errors.New("invalid transaction because no regulator provided")
@@ -25,7 +25,7 @@ var (
 
 // RegulatorClient struct for communicating with the regulator
 type RegulatorClient struct {
-	contract *regulators.Regulators
+	contract *des.Des
 	client   *ethclient.Client
 	events   chan types.Log
 	regMap   map[string]bool
@@ -50,7 +50,7 @@ func getClient() (client *ethclient.Client) {
 // NewRegulatorClient initializes returns the regulator client
 func NewRegulatorClient() (*RegulatorClient, error) {
 	//TODO: add check for genesis in association with contract address
-	contract, err := regulators.NewRegulators(RegContractAddress, getClient())
+	contract, err := des.NewDes(RegContractAddress, getClient())
 	if err != nil {
 		log.Error("Failed to create a Regulator Client", "error", err)
 		return nil, err
@@ -64,7 +64,7 @@ func (r *RegulatorClient) IsRegulatorPresent(privateFor []string) (bool, error) 
 	var err error
 	if r.client == nil {
 		client, err := ethclient.Dial(ipc)
-		contract, err := regulators.NewRegulators(RegContractAddress, client)
+		contract, err := des.NewDes(RegContractAddress, client)
 		if err != nil {
 			log.Error("Failed to communicate with regulator contract", "error", err)
 			return isPresent, nil
