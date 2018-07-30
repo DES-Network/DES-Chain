@@ -60,9 +60,9 @@ func NewRegulatorClient() (*RegulatorClient, error) {
 }
 
 // IsRegulatorPresent checks if regulator is one of the privateFor
-func (r *RegulatorClient) IsRegulatorPresent(privateFor []string) (bool, error) {
-	isPresent := false
-	var err error
+func (r *RegulatorClient) IsRegulatorPresent(from string, privateFor []string) (isPresent bool, err error) {
+	isPresent = false
+	err = nil
 	// TODO: could make it more efficient
 	if r.contract == nil {
 		log.Trace("Contract is empty so trying to instantiate contract object")
@@ -75,6 +75,22 @@ func (r *RegulatorClient) IsRegulatorPresent(privateFor []string) (bool, error) 
 		r.contract = contract
 		r.client = client
 	}
+
+	// first check if sender is a regulator
+	if from != "" {
+	if isPresent = r.regMap[from]; isPresent {
+		return
+	} 
+	isPresent, err = r.contract.Exists(&bind.CallOpts{Context: context.TODO()}, from)
+		if err != nil {
+			log.Error("Couldn't communicate with regulator contract", "error", err)
+		} else if isPresent {
+			r.regMap[from] = true
+			return 
+		}
+	}
+
+	// check to see if any of the recipients are regulators
 	for i := range privateFor {
 		if isPresent = r.regMap[privateFor[i]]; isPresent {
 			break
@@ -88,7 +104,7 @@ func (r *RegulatorClient) IsRegulatorPresent(privateFor []string) (bool, error) 
 			break
 		}
 	}
-	return isPresent, nil
+	return
 }
 
 

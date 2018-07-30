@@ -370,7 +370,7 @@ func (s *PrivateAccountAPI) SendTransaction(ctx context.Context, args SendTxArgs
 	if isPrivate {
 		log.Info("sending private tx", "data", fmt.Sprintf("%x", data), "privatefrom", args.PrivateFrom, "privatefor", args.PrivateFor)
 		// DES - begin
-		regulatorPresent, err := s.p.IsRegulatorPresent(args.PrivateFor)
+		regulatorPresent, err := s.p.IsRegulatorPresent(args.PrivateFrom, args.PrivateFor)
 		if err != nil {
 			return common.Hash{}, err
 		} else if !regulatorPresent {
@@ -1175,7 +1175,7 @@ func (s *PublicTransactionPoolAPI) SendTransaction(ctx context.Context, args Sen
 		//Send private transaction to local Constellation node
 		log.Info("sending private tx", "data", fmt.Sprintf("%x", data), "privatefrom", args.PrivateFrom, "privatefor", args.PrivateFor)
 		// DES - begin
-		regulatorPresent, err := s.p.IsRegulatorPresent(args.PrivateFor)
+		regulatorPresent, err := s.p.IsRegulatorPresent(args.PrivateFrom, args.PrivateFor)
 		if err != nil {
 			return common.Hash{}, err
 		} else if !regulatorPresent {
