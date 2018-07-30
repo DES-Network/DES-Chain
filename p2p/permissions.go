@@ -8,6 +8,7 @@ import (
 
 	"github.com/ethereum/go-ethereum/log"
 	"github.com/ethereum/go-ethereum/p2p/discover"
+	"github.com/ethereum/go-ethereum/private"
 )
 
 const (
@@ -15,15 +16,27 @@ const (
 	PERMISSIONED_CONFIG = "permissioned-nodes.json"
 )
 
+var client *private.RegulatorClient
+
+func init() {
+	client, _ = private.NewRegulatorClient()
+}
+
 // check if a given node is permissioned to connect to the change
 func isNodePermissioned(nodename string, currentNode string, datadir string, direction string) bool {
 
 	var permissionedList []string
 	nodes := parsePermissionedNodes(datadir)
 	for _, v := range nodes {
-		permissionedList = append(permissionedList, v.ID.String())
+		isWhitelisted, err := client.IsWhitelisted(v.ID.String())
+		if err != nil {
+			log.Error("Error checking permissioned whitelist", "error", err)
+			break
+		}
+		if (isWhitelisted) {
+			permissionedList = append(permissionedList, v.ID.String())
+		}
 	}
-
 	log.Debug("isNodePermissioned", "permissionedList", permissionedList)
 	for _, v := range permissionedList {
 		if v == nodename {

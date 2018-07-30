@@ -14,7 +14,7 @@ import (
 	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/ethereum/go-ethereum/log"
 )
-// TODO: rename
+// TODO: refactor
 var (
 	RegContractAddress = common.HexToAddress("0x1932c48b2bF8102Ba33B4A6B545C32236e342f34")
 	ErrNoRegulator     = errors.New("invalid transaction because no regulator provided")
@@ -29,6 +29,7 @@ type RegulatorClient struct {
 	client   *ethclient.Client
 	events   chan types.Log
 	regMap   map[string]bool
+	whitelist map[string]bool
 }
 
 func getClient() (client *ethclient.Client) {
@@ -49,23 +50,25 @@ func getClient() (client *ethclient.Client) {
 
 // NewRegulatorClient initializes returns the regulator client
 func NewRegulatorClient() (*RegulatorClient, error) {
-	//TODO: add check for genesis in association with contract address
-	contract, err := des.NewDes(RegContractAddress, getClient())
-	if err != nil {
-		log.Error("Failed to create a Regulator Client", "error", err)
-		return nil, err
-	}
-	return &RegulatorClient{client: getClient(), regMap: make(map[string]bool), contract: contract}, nil
+	//TODO: add check for genesis in association with contract address in init()
+	// contract, err := des.NewDes(RegContractAddress, getClient())
+	// if err != nil {
+	// 	log.Error("Failed to create a Regulator Client", "error", err)
+	// 	return nil, err
+	// }
+	return &RegulatorClient{regMap: make(map[string]bool), whitelist: make(map[string]bool)}, nil
 }
 
 // IsRegulatorPresent checks if regulator is one of the privateFor
 func (r *RegulatorClient) IsRegulatorPresent(privateFor []string) (bool, error) {
 	isPresent := false
 	var err error
-	if r.client == nil {
+	// TODO: could make it more efficient
+	if r.contract == nil {
+		log.Trace("Contract is empty so trying to instantiate contract object")
 		client, err := ethclient.Dial(ipc)
 		contract, err := des.NewDes(RegContractAddress, client)
-		if err != nil {
+		if err != nil || client == nil {
 			log.Error("Failed to communicate with regulator contract", "error", err)
 			return isPresent, nil
 		}
@@ -86,4 +89,34 @@ func (r *RegulatorClient) IsRegulatorPresent(privateFor []string) (bool, error) 
 		}
 	}
 	return isPresent, nil
+}
+
+
+// IsRegulatorPresent checks if regulator is one of the privateFor
+func (r *RegulatorClient) IsWhitelisted(enode string) (bool, error) {
+	isWhitelisted := false
+	var err error
+	if r.contract == nil {
+		log.Trace("Contract is empty so trying to instantiate contract object")
+		client, err := ethclient.Dial(ipc)
+		contract, err := des.NewDes(RegContractAddress, client)
+		if err != nil || client == nil {
+			log.Error("Failed to communicate with permissions contract", "error", err)
+			return isWhitelisted, nil
+		}
+		r.contract = contract
+		r.client = client
+	}
+
+		if isWhitelisted = r.whitelist[enode]; isWhitelisted {
+			return isWhitelisted, nil
+		}
+		isWhitelisted, err = r.contract.NodeExists(&bind.CallOpts{Context: context.TODO()}, enode)
+		if err != nil {
+			log.Error("Couldn't communicate with regulator contract", "error", err)
+		} else if isWhitelisted {
+			r.whitelist[enode] = true
+		}
+
+	return isWhitelisted, nil
 }
