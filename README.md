@@ -1,8 +1,14 @@
-# Quorum
+# DES-Network
 
-<a href="https://quorumslack.azurewebsites.net" target="_blank" rel="noopener"><img title="Quorum Slack" src="https://quorumslack.azurewebsites.net/badge.svg" alt="Quorum Slack" /></a>
+The DES Network is a fork of Quorum that adds some restrictions to its protocol, by limiting permissioned nodes to a curated whitelist controlled by a set of Regulators. It also ensures that all private transactions are privy to at least one Regulator.
 
-Quorum is an Ethereum-based distributed ledger protocol with transaction/contract privacy and new consensus mechanisms.
+These restrictions are controlled via a smart contract that is deployed after the network is launched by the network owner.
+
+Key enhancements over Quorum:
+*__Regulators__ - DES requires Regulators in the network, which are considered central authorities responsible for providing mediation, if required. 
+*__Permissioned__ - DES enhances Quorum's permissioning to make permissioned nodes mandatory and adds a mechanism whereby only Regulators may whitelist a node that wishes to participate in the network and only nodes that are whitelisted would be part of the network.
+
+## Quorum
 
 Quorum is a fork of [go-ethereum](https://github.com/ethereum/go-ethereum) and is updated in line with go-ethereum releases.
 
@@ -25,94 +31,14 @@ The above diagram is a high-level overview of the privacy architecture used by Q
 
 ## Quickstart
 
-The quickest way to get started with Quorum is using [VirtualBox](https://www.virtualbox.org/wiki/Downloads) and [Vagrant](https://www.vagrantup.com/downloads.html):
+The quickest way to get started with DES is to clone this repo and navigate to the test-network folder:
 
 ```sh
 git clone https://github.com/jpmorganchase/quorum-examples
-cd quorum-examples
-vagrant up
-# (should take 5 or so minutes)
-vagrant ssh
+cd test-network
 ```
 
-Now that you have a fully-functioning Quorum environment set up, let's run the 7-node cluster example. This will spin up several nodes with a mix of voters, block makers, and unprivileged nodes.
-
-```sh
-# (from within vagrant env, use `vagrant ssh` to enter)
-ubuntu@ubuntu-xenial:~$ cd quorum-examples/7nodes
-
-$ ./raft-init.sh
-# (output condensed for clarity)
-[*] Cleaning up temporary data directories
-[*] Configuring node 1
-[*] Configuring node 2 as block maker and voter
-[*] Configuring node 3
-[*] Configuring node 4 as voter
-[*] Configuring node 5 as voter
-[*] Configuring node 6
-[*] Configuring node 7
-
-$ ./raft-start.sh
-[*] Starting Constellation nodes
-[*] Starting bootnode... waiting... done
-[*] Starting node 1
-[*] Starting node 2
-[*] Starting node 3
-[*] Starting node 4
-[*] Starting node 5
-[*] Starting node 6
-[*] Starting node 7
-[*] Unlocking account and sending first transaction
-Contract transaction send: TransactionHash: 0xbfb7bfb97ba9bacbf768e67ac8ef05e4ac6960fc1eeb6ab38247db91448b8ec6 waiting to be mined...
-true
-```
-
-We now have a 7-node Quorum cluster with a [private smart contract](https://github.com/jpmorganchase/quorum-examples/blob/master/examples/7nodes/script1.js) (SimpleStorage) sent from `node 1` "for" `node 7` (denoted by the public key passed via `privateFor: ["ROAZBWtSacxXQrOe3FGAqJDyJjFePR5ce4TSIzmJ0Bc="]` in the `sendTransaction` call).
-
-Connect to any of the nodes and inspect them using the following commands:
-
-```sh
-$ geth attach ipc:qdata/dd1/geth.ipc
-$ geth attach ipc:qdata/dd2/geth.ipc
-...
-$ geth attach ipc:qdata/dd7/geth.ipc
-
-
-# e.g.
-
-$ geth attach ipc:qdata/dd2/geth.ipc
-Welcome to the Geth JavaScript console!
-
-instance: Geth/v1.5.0-unstable/linux/go1.7.3
-coinbase: 0xca843569e3427144cead5e4d5999a3d0ccf92b8e
-at block: 679 (Tue, 15 Nov 2016 00:01:05 UTC)
- datadir: /home/ubuntu/quorum-examples/7nodes/qdata/dd2
- modules: admin:1.0 debug:1.0 eth:1.0 net:1.0 personal:1.0 quorum:1.0 rpc:1.0 txpool:1.0 web3:1.0
-
-# let's look at the private txn created earlier:
-> eth.getTransaction("0xbfb7bfb97ba9bacbf768e67ac8ef05e4ac6960fc1eeb6ab38247db91448b8ec6")
-{
-  blockHash: "0xb6aec633ef1f79daddc071bec8a56b7099ab08ac9ff2dc2764ffb34d5a8d15f8",
-  blockNumber: 1,
-  from: "0xed9d02e382b34818e88b88a309c7fe71e65f419d",
-  gas: 300000,
-  gasPrice: 0,
-  hash: "0xbfb7bfb97ba9bacbf768e67ac8ef05e4ac6960fc1eeb6ab38247db91448b8ec6",
-  input: "0x9820c1a5869713757565daede6fcec57f3a6b45d659e59e72c98c531dcba9ed206fd0012c75ce72dc8b48cd079ac08536d3214b1a4043da8cea85be858b39c1d",
-  nonce: 0,
-  r: "0x226615349dc143a26852d91d2dff1e57b4259b576f675b06173e9972850089e7",
-  s: "0x45d74765c5400c5c280dd6285a84032bdcb1de85a846e87b57e9e0cedad6c427",
-  to: null,
-  transactionIndex: 1,
-  v: "0x25",
-  value: 0
-}
-```
-
-Note in particular the `v` field value of "0x25" or "0x26" (37 or 38 in decimal) which marks this transaction as having a private payload (input).
-
-## Demonstrating Privacy
-Documentation detailing steps to demonstrate the privacy features of Quorum can be found in [quorum-examples/7nodes/README](https://github.com/jpmorganchase/quorum-examples/tree/master/examples/7nodes/README.md).
+There you will find detailed instructions on how to set up a test network and test scripts for analyzing different scenarios.
 
 ## Further Reading
 
