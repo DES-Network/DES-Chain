@@ -16,25 +16,39 @@ const (
 	PERMISSIONED_CONFIG = "permissioned-nodes.json"
 )
 
-var client *private.RegulatorClient
+type PermissioningClient struct {
+	r *private.RegulatorClient
+}
 
-func init() {
-	client, _ = private.NewRegulatorClient()
+// NewPermissioningClient will create a permissioning client
+func NewPermissioningClient() *PermissioningClient {
+	client, _ := private.NewRegulatorClient()
+	log.Trace("Permissioning: Get Reg Client", "client", client)
+	return &PermissioningClient{client}
 }
 
 // check if a given node is permissioned to connect to the change
-func isNodePermissioned(nodename string, currentNode string, datadir string, direction string) bool {
+func (p *PermissioningClient) isNodePermissioned(nodename string, currentNode string, datadir string, direction string) bool {
 
 	var permissionedList []string
 	nodes := parsePermissionedNodes(datadir)
-	for _, v := range nodes {
-		isWhitelisted, err := client.IsWhitelisted(v.ID.String())
-		if err != nil {
-			log.Error("Error checking permissioned whitelist", "error", err)
-			break
-		}
-		if (isWhitelisted) {
+
+	if !p.r.IsDeployed() {
+		log.Debug("Contract not yet deployed, take permissioned list for granted")
+		for _, v := range nodes {
 			permissionedList = append(permissionedList, v.ID.String())
+		}
+	} else {
+		log.Debug("Contract deployed now, filter nodes using whitelist")
+		for _, v := range nodes {
+			isWhitelisted, err := p.r.IsWhitelisted(v.ID.String())
+			if err != nil {
+				log.Error("Error checking permissioned whitelist", "error", err)
+				break
+			}
+			if isWhitelisted {
+				permissionedList = append(permissionedList, v.ID.String())
+			}
 		}
 	}
 	log.Debug("isNodePermissioned", "permissionedList", permissionedList)

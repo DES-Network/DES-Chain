@@ -176,6 +176,9 @@ type Server struct {
 	delpeer       chan peerDrop
 	loopWG        sync.WaitGroup // loop, listenLoop
 	peerFeed      event.Feed
+
+	//DES
+	pc *PermissioningClient
 }
 
 type peerOpFunc func(map[discover.NodeID]*Peer)
@@ -383,6 +386,7 @@ func (srv *Server) Start() (err error) {
 	srv.removestatic = make(chan *discover.Node)
 	srv.peerOp = make(chan peerOpFunc)
 	srv.peerOpDone = make(chan struct{})
+	srv.pc = NewPermissioningClient()
 
 	// node table
 	if !srv.NoDiscovery {
@@ -742,7 +746,7 @@ func (srv *Server) SetupConn(fd net.Conn, flags connFlag, dialDest *discover.Nod
 			log.Trace("Node Permissioning", "Connection Direction", direction)
 		}
 
-		if !isNodePermissioned(node, currentNode, srv.DataDir, direction) {
+		if !srv.pc.isNodePermissioned(node, currentNode, srv.DataDir, direction) {
 			return
 		}
 	} else {
