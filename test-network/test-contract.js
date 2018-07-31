@@ -20,3 +20,18 @@ if (result) {
 } else {
 	console.log("Node 1 has not been added as a permissioned node");
 }
+
+result = contractInstance.nodeExists('0ba6b9f606a43a95edc6247cdb1c1e105145817be7bcafd6b2c0ba15d58145f0dc1a194f70ba73cd6f4cdd6864edc7687f311254c7555cc32e4d45aeb1b80416');
+if (result) {
+	console.log("Node 2 has been added as a permissioned node")
+} else {
+	console.log("Node 2 has not been added as a permissioned node");
+}
+
+result = contractInstance.nodeExists('579f786d4e2830bbcc02815a27e8a9bacccc9605df4dc6f20bcc1a6eb391e7225fff7cb83e5b4ecd1f3a94d8b733803f2f66b7e871961e7b029e22c155c3a778');
+if (result) {
+	console.log("Node 3 has been added as a permissioned node")
+} else {
+	console.log("Node 3 has not been added as a permissioned node");
+}
+

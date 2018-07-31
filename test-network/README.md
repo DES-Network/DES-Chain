@@ -4,8 +4,8 @@ These scripts help configure a test DES network and allow you to evaluate the fu
 
 Given below is a description of the scripts, what they do and the flow of how you should use these scripts, in what order, to get a test network up and running.
 
-  1. `1-init.sh`: Cleanup previous directories (delete any previous chain data) and (re)initialize accounts and keystores for configuring a new network and its nodes. This will set up the environment required to launch the network.
-  2. `2-start-des-network.sh`: Launch `constellation` and `geth` node for the network owner. This will launch the DES network with a single node, which is the owner of the network.
+  1. `init.sh`: Cleanup previous directories (delete any previous chain data) and (re)initialize accounts and keystores for configuring a new network and its nodes. This will set up the environment required to launch the network.
+  2. `start-des-network.sh`: Launch `constellation` and `geth` node for the network owner. This will launch the DES network with a single node, which is the owner of the network.
   3. `deploy-and-init.js`: Deploy the DES network contract that will help add/remove and keep track of the regulators in the network and the nodes in the network. Since only permissioned nodes are allowed in the DES network, the owner will have to add any new nodes to this contract to ensure their participation in the network. 
 
   Note that this is written in javascript and requires attachment to a geth node for execution. We have created a script that will make this easy, so you can run this as `./run-as-owner.sh deploy-and-init.js`.
