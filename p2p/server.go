@@ -140,8 +140,6 @@ type Config struct {
 	// whenever a message is sent to or received from a peer
 	EnableMsgEvents bool
 
-	EnableNodePermission bool `toml:",omitempty"`
-
 	DataDir string `toml:",omitempty"`
 }
 
@@ -724,11 +722,10 @@ func (srv *Server) SetupConn(fd net.Conn, flags connFlag, dialDest *discover.Nod
 		return
 	}
 
-	//START - QUORUM Permissioning
+	//START - QUORUM/DES Permissioning
 	currentNode := srv.NodeInfo().ID
 	cnodeName := srv.NodeInfo().Name
-	log.Trace("Quorum permissioning",
-		"EnableNodePermission", srv.EnableNodePermission,
+	log.Trace("DES Permission check",
 		"DataDir", srv.DataDir,
 		"Current Node ID", currentNode,
 		"Node Name", cnodeName,
@@ -736,24 +733,19 @@ func (srv *Server) SetupConn(fd net.Conn, flags connFlag, dialDest *discover.Nod
 		"Connection ID", c.id,
 		"Connection String", c.id.String())
 
-	if srv.EnableNodePermission {
-		log.Trace("Node Permissioning is Enabled.")
-		node := c.id.String()
-		direction := "INCOMING"
-		if dialDest != nil {
-			node = dialDest.ID.String()
-			direction = "OUTGOING"
-			log.Trace("Node Permissioning", "Connection Direction", direction)
-		}
-
-		if !srv.pc.isNodePermissioned(node, currentNode, srv.DataDir, direction) {
-			return
-		}
-	} else {
-		log.Trace("Node Permissioning is Disabled.")
+	node := c.id.String()
+	direction := "INCOMING"
+	if dialDest != nil {
+		node = dialDest.ID.String()
+		direction = "OUTGOING"
+		log.Trace("Node Permissioning", "Connection Direction", direction)
 	}
 
-	//END - QUORUM Permissioning
+	if !srv.pc.isNodePermissioned(node, currentNode, srv.DataDir, direction) {
+		return
+	}
+
+	//END - QUORUM/DES Permissioning
 
 	clog := log.New("id", c.id, "addr", c.fd.RemoteAddr(), "conn", c.flags)
 	// For dialed connections, check that the remote public key matches.
