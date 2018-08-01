@@ -14,9 +14,6 @@ var address = "0x1932c48b2bF8102Ba33B4A6B545C32236e342f34";
 
 var c = regContract.new("BULeR8JyUWhiuuCMU/HLA0Q5pzkYT+cHII3ZKBey3Bo=", "ac6b1096ca56b9f6d004b779ae3728bf83f8e22453404cc3cef16a3d9b96608bc67c4b30db88e0a5a6c6390213f7acbe1153ff6d23ce57380104288ae19373ef", {from:web3.eth.accounts[0], data: bytecode, gas: 0x47b760});
 
-console.log(c)
-console.log(c.address)
-
 console.log("\n\nThe contract will be mined when two or more nodes accept this transaction.\n Before this contract is deployed, the permissioning works like Quorum, wherein any node in the permissioned nodes file is considered safe. However, once the contract has been launched, the contract overrides the permissioned nodes file and decides which nodes are permissioned.")
 console.log("\nNow let's add another node to the whitelist with './run-as-owner.sh whitelist.js'\n")
 

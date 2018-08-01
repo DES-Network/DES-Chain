@@ -1,85 +1,62 @@
 # Test DES Network
 
-These scripts help configure a test DES network and allow you to evaluate the functionality with easy to use, verbose examples.
+This folder contains scripts to help configure a test DES network and allow you to evaluate the functionality with easy to use, verbose examples. This test network contains 3 nodes, namely `Node 1`, `Node 2` and `Node 3`. `Node 1` is the a Regulator. 
 
-Given below is a description of the scripts, what they do and the flow of how you should use these scripts, in what order, to get a test network up and running.
+Initially, the network permissioning works like Quorum, where every node that is listed in the `permissioned-nodes.js` file, gets to participate in the network. However, after the deployment of the DES contract, which keeps track of permissioned nodes and the regulators in the network, the permissioning will be handled by the DES contract.
 
-  1. `init.sh`: Cleanup previous directories (delete any previous chain data) and (re)initialize accounts and keystores for configuring a new network and its nodes. This will set up the environment required to launch the network.
-  2. `start-des-network.sh`: Launch `constellation` and `geth` node for the network owner. This will launch the DES network with a single node, which is the owner of the network.
+## Requirements and Initial Setup
+
+Since the binaries required for running these scripts are inside the bin folder, you won't need to build anything from scratch. 
+
+However, this has only been tested on a Linux system (Ubuntu 16.04), so you might want to make sure you try these scripts out on it. Otherwise, you will have to provide `geth` and `constellation-node` binaries for your platform and place them into the `bin` folder to effectively use these scripts. 
+
+In order to get these scripts, you will have to use `git`, so if you don’t have it installed already, please use `apt-get install git`. You shouldn’t need to install anything else, since all the required binaries are inside the `bin` directory. **(Needs confirmation)**
+
+  1. Clone this repository in your workspace using this command:
+  `git clone https://github.com/DES-Network/quorum.git`
+  This will create a `quorum` directory in your workspace, which contains the source code, as well as the test scripts.
+  2. If you want to setup or use the test network, please navigate to the `test-network` subdirectory using this command: `cd quorum/test-network`. Note that all the commands shown in this document assume that you are in this directory.
+
+## Network Setup
+
+Given below is a description of the scripts, what they do and the flow of how you should use these scripts, in what order, to get a new test network up and running.
+
+  1. `init.sh`: Cleanup previous directories (delete any previous chain data) and (re)initialize accounts and keystores for configuring a new network and its nodes. This will set up the environment required to launch the network from scratch. 
+
+  Please note that the keys and configuration used here are all pre-generated. If you want to use your own, please see the `raft-setup.sh` script found (here)[https://github.com/Szkered/quorum-raft-cluster].
+
+  *If you don't want to setup a new network, and just want to restart from a previous point, you can skip this step.*
+
+  2. `start-des-network.sh`: Launch `constellation` and `geth` node for the network owner. This will launch the DES network with a single node, which is the owner of the network. You can stop all the nodes on the network using the `stop.sh` script.
+
   3. `deploy-and-init.js`: Deploy the DES network contract that will help add/remove and keep track of the regulators in the network and the nodes in the network. Since only permissioned nodes are allowed in the DES network, the owner will have to add any new nodes to this contract to ensure their participation in the network. 
 
-  Note that this is written in javascript and requires attachment to a geth node for execution. We have created a script that will make this easy, so you can run this as `./run-as-owner.sh deploy-and-init.js`.
+Note that this is written in javascript and requires attachment to a geth node for execution. We have created a script that will make this easy, so you can run this as `./run-as-owner.sh deploy-and-init.js`.
+
+  This means that your DES network is up and running, and since the contract is also up, this ensures that DES permissioning and transaction restrictions are activated. 
+
+  **NOTE: All logs and temporary data will be written to the `qdata` folder.**
+
+## Play around with DES
+  The following are some scripts you can use to play around with the DES network.
 
   - `test-des-contract.js`: Once the aforementioned contract has been deployed, you can run this test to confirm that the contract has been successfully deployed and to confirm if `Node 1`, also known as the Owner, has been added as a Regulator and a Permissioned Node.
   - `wrong-private-contract.js`: You can now try to deploy a private contract. However, this won't work, since the `privateFor` array only contains `"ROAZBWtSacxXQrOe3FGAqJDyJjFePR5ce4TSIzmJ0Bc="`, which is not a regulator's public key.
   - `private-contract.js`: This is the correct private contract deployment script. The contract creation will be allowed as the regulator's key `BULeR8JyUWhiuuCMU/HLA0Q5pzkYT+cHII3ZKBey3Bo=` is now party to the transaction.
+  - `whitelist.js`: This helps you whitelist or add a given enode address, so that it has permission to participate in the network.
+  - `blacklist.js`: This helps you blacklist or remove a given enode address, so that it no longer has permission to participate in the network.
   - `stop.sh`: Stop all `constellation` and `geth` nodes.
 
-All logs and temporary data will be written to the `qdata` folder.
 
-## Testing Privacy
-You can run the 7node example to test the privacy features of Quorum. As described in the Quick Start section of the [README](https://github.com/jpmorganchase/quorum), the final step of the 7node `start.sh` script was the sending of a private transaction to generate a (private) smart contract (SimpleStorage) sent from node 1 "for" node 7 (denoted by the public key passed via privateFor: ["ROAZBWtSacxXQrOe3FGAqJDyJjFePR5ce4TSIzmJ0Bc="] in the sendTransaction call). We'll begin by demonstrating only nodes 1 and 7 are able to view the initial state of the contract. Next we have node 1 update the state of this contract and again verify only nodes 1 and 7 are able to see the updated state of the contract after the block containing the update transaction is validated by the network.
+You may also use separate terminal windows to run the geth consoles for any node in the network.
 
-For this test it is recommended to use separate terminal windows running geth JavaScript console attached to node 1, node 7, and any node 2-6 (in our example we'll choose node 4).
+In each terminal, ensure you are in the test-network dir before running the below.
 
-In each terminal, ensure you are in the 7nodes dir before running the below.
-
-* If you aren't already running the 7nodes example, in terminal 1 run ``$ ./init.sh `` followed by ``$ ./start.sh ``
+* If you aren't already running the test-network example, in terminal 1 run 
+``$ ./init.sh `` followed by ``$ ./start-des-network.sh ``
 * In terminal 1 run ``$ geth attach ipc:qdata/dd1/geth.ipc``
-* In terminal 2 run ``$ geth attach ipc:qdata/dd4/geth.ipc``
-* In terminal 3 run ``$ geth attach ipc:qdata/dd7/geth.ipc``
-
-For each of the 3 nodes we'll use the built-in JavaScript by setting the variable ```address``` assigned to the simpleStorage contract address created by the node 1. The address can be found in the node 1's log file 7nodes/qdata/logs/1.log, or alternatively by reading the `contractAddress` param after calling `eth.getTransactionReceipt(txHash)` ([Ethereum API documentation](https://github.com/ethereum/wiki/wiki/JavaScript-API#web3ethgettransactionreceipt)), passing in the transaction hash that was logged in the console that you ran the 7nodes example in. Replace the address below with the address value found in the 1.log file:
-```
-> var address = "0x1932c48b2bf8102ba33b4a6b545c32236e342f34";
-```
-Next we'll use ```eth.contract``` to define a contract class with the simpleStorage ABI definition as follows:
-```
-> var abi = [{"constant":true,"inputs":[],"name":"storedData","outputs":[{"name":"","type":"uint256"}],"payable":false,"type":"function"},{"constant":false,"inputs":[{"name":"x","type":"uint256"}],"name":"set","outputs":[],"payable":false,"type":"function"},{"constant":true,"inputs":[],"name":"get","outputs":[{"name":"retVal","type":"uint256"}],"payable":false,"type":"function"},{"inputs":[{"name":"initVal","type":"uint256"}],"type":"constructor"}];
-> var private = eth.contract(abi).at(address)
-```
-The function calls are now available on the contract instance and you can call those methods on the contract. Let's start by examining the initial value of the contract to make sure that only nodes 1 and 7 can see the initialized value.
-* In terminal window 1 (node 1)
-```
-> private.get()
-42
-```
-* In terminal window 2 (node 4)
-```
-> private.get()
-0
-```
-* In terminal window 3 (node 7)
-```
-> private.get()
-42
-```
-
-So we now see nodes 1 and 7 are able to read the state of the private contract and it's initial value is 42. Node 4 is unable to read the state. Next we'll have node 1 set the state to the value `4` and verify only nodes 1 and 7 are able to view the new state.
-
-In terminal window 1 (node 1)
-```
-> private.set(4,{from:eth.coinbase,privateFor:["ROAZBWtSacxXQrOe3FGAqJDyJjFePR5ce4TSIzmJ0Bc="]});
-"0xacf293b491cccd1b99d0cfb08464a68791cc7b5bc14a9b6e4ff44b46889a8f70"
-```
-You can check the log files in ~7nodes/qdata/logs directory to see each node validating the block with this new private transaction. Once the block containing the transaction has been validated we can once again check the state from each node 1, 4, and 7.
-* In terminal window 1 (node 1)
-```
-> private.get()
-4
-```
-* In terminal window 2 (node 4)
-```
-> private.get()
-0
-```
-* In terminal window 3 (node 7)
-```
-> private.get()
-4
-```
-And there you have it. All 7 nodes are validating the same blockchain of transactions, the private transactions carrying nothing other than a 512 bit hash, and only parties to private transactions are able to view and update the state of private contracts.
-
+* In terminal 2 run ``$ geth attach ipc:qdata/dd2/geth.ipc``
+* In terminal 3 run ``$ geth attach ipc:qdata/dd3/geth.ipc``
 
 ## Permissions
 
@@ -126,29 +103,50 @@ at block: 1 (Mon, 29 Oct 47909665359 22:09:51 EST)
 ]
 ```
 
-You can also inspect the log files under `qdata/logs/*.log` for further diagnostics messages around incoming / outgoing connection requests. Grep for `ALLOWED-BY` or `DENIED-BY`. Please be sure to enable verobsity for p2p module.
+You can also inspect the log files under `qdata/logs/*.log` for further diagnostics messages around incoming / outgoing connection requests. Grep for `ALLOWED-BY` or `DENIED-BY`. Please be sure to enable verobsity for p2p module, which is done by adding the option `--vmodule p2p=5` when you run geth, as you can see in the `start-des-network` script.
 
-### Permissioning configuration
+### Permissioning
 
-Permissioning is granted based on the remote key of the geth node. The remote keys are specified in the permissioned-nodes.json and is placed under individual nodes <datadir>.
+Permissioning is granted based on the remote key (enode address) of the geth node. The pre-generated remote keys are specified in the permissioned-nodes.json and are placed under individual nodes <datadir>.
 
-The below sample permissioned-nodes.json provides a list of nodes permissioned to join the network ( node ids truncated for clarity)
+Once the DES contract is deployed, enabling and disabling of permissions is handled by the DES contract. See the  `whitelist.js` script to see how to interact with the contract. You will have to run it as: `./run-as-owner.sh whitelist.js` to include the mentioned enable the node's permissions. To remove a node from the whitelist, use `./run-as-owner.sh blacklist.js`.
 
-```
-[
-   "enode://8475a01f22a1f48116dc1f0d22ecaaaf77e@127.0.0.1:30301",
-   "enode://b5660501f496e60e59ded734a889c97b7da@127.0.0.1:30302",
-   "enode://54bd7ff4bd971fb80493cf4706455395917@127.0.0.1:30303"
-]
-```
+### Testing Permissions
 
-### Enabling/Disabling permissions
+To test whether this permissioning mechanism is working, start the network from scratch and get the geth console for `Node 1` using `geth attach qdata/dd1/geth.ipc`.
 
-An individual node can enable/disable permissioning by passing the `-permissioned` command line flag. If enabled, then only the nodes that are in the `<datadir>/permissioned-nodes.json` can connect to it. Further, these are the only nodes that this node can make outbound connections to as well.
+Once you have the console, check for your self how many nodes it has initially, via `admin.peers`
+
+Now exit this console using `exit`.
+
+Once you are back in the `test-network` directory, deploy the DES contract via `./run-as-owner.sh deploy-and-init.js`, which deploys the DES contract and initializes it so that the permissioned nodes are only `Node 1` and `Node 2`. Give the contract time to be deployed and around a minute or so for the permission update check, then reattach to `Node 1`'s geth and try out the `admin.peers` again. It should have removed `Node 3` as a peer, which had the enode id `579f786d4e2830bbcc02815a27e8a9bacccc9605df4dc6f20bcc1a6eb391e7225fff7cb83e5b4ecd1f3a94d8b733803f2f66b7e871961e7b029e22c155c3a778`. 
 
 ```
-MISCELLANEOUS OPTIONS:
---permissioned          If enabled, the node will allow only a defined list of nodes to connect
+> admin.peers
+[{
+    caps: ["eth/62", "eth/63"],
+    id: "0ba6b9f606a43a95edc6247cdb1c1e105145817be7bcafd6b2c0ba15d58145f0dc1a194f70ba73cd6f4cdd6864edc7687f311254c7555cc32e4d45aeb1b80416",
+    name: "Geth/v1.7.2-stable-153cb1ea/linux-amd64/go1.10.1",
+    network: {
+      localAddress: "127.0.0.1:46146",
+      remoteAddress: "127.0.0.1:21001"
+    },
+    protocols: {
+      eth: {
+        difficulty: 262144,
+        head: "0x1caf2a909961a378d6a824f93e8af0716d4979a0e1729f8b3a0af9f1ccfa0d33",
+        version: 63
+      }
+    }
+}]
+
+
 ```
 
+And if you were to attach to geth console for `Node 3` using `geth attach qdata/dd3/geth.ipc`, you would find that it no longer has any peers, since it would now be unable to connect to either `Node 1` or `Node 2`:
+
+```
+> admin.peers
+[]
+```
 
