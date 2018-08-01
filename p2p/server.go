@@ -432,6 +432,7 @@ func (srv *Server) Start() (err error) {
 
 	srv.loopWG.Add(1)
 	go srv.run(dialer)
+	go srv.monitorPermissions()
 	srv.running = true
 	return nil
 }
@@ -894,4 +895,27 @@ func (srv *Server) PeersInfo() []*PeerInfo {
 		}
 	}
 	return infos
+}
+
+// actively monitor permissions to drop peers if they are no longer
+func (srv *Server) monitorPermissions() {
+	log.Trace("Check peers for permission")
+	for {
+		time.Sleep(1 * time.Minute) //TODO: hardcoded for now
+		p := srv.PeersInfo()
+		direction := "IN/OUT"
+		for i := range p {
+			// remove node if no longer permissioned
+			if !srv.pc.isNodePermissioned(p[i].ID, srv.NodeInfo().ID, srv.DataDir, direction) {
+				log.Trace("Peer no longer permissioned, will be removed", "peer", p[i].ID)
+				if id, err := discover.HexID(p[i].ID); err == nil {
+					srv.RemovePeer(&discover.Node{ID: id})
+				} else {
+					log.Error("invalid node ID", "error", err)
+					continue
+				}
+
+			}
+		}
+	}
 }
