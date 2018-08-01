@@ -34,12 +34,12 @@ func (p *PermissioningClient) isNodePermissioned(nodename string, currentNode st
 	nodes := parsePermissionedNodes(datadir)
 
 	if !p.r.IsDeployed() {
-		log.Debug("Contract not yet deployed, take permissioned list for granted")
+		log.Trace("Contract not yet deployed, take permissioned list for granted")
 		for _, v := range nodes {
 			permissionedList = append(permissionedList, v.ID.String())
 		}
 	} else {
-		log.Debug("Contract deployed now, filter nodes using whitelist")
+		log.Trace("Contract deployed now, filter nodes using whitelist")
 		for _, v := range nodes {
 			isWhitelisted, err := p.r.IsWhitelisted(v.ID.String())
 			if err != nil {
@@ -51,13 +51,12 @@ func (p *PermissioningClient) isNodePermissioned(nodename string, currentNode st
 			}
 		}
 	}
-	log.Debug("isNodePermissioned", "permissionedList", permissionedList)
+	log.Trace("isNodePermissioned", "permissionedList", permissionedList)
 	for _, v := range permissionedList {
 		if v == nodename {
 			log.Debug("isNodePermissioned", "connection", direction, "nodename", nodename[:NODE_NAME_LENGTH], "ALLOWED-BY", currentNode[:NODE_NAME_LENGTH])
 			return true
 		}
-		log.Debug("isNodePermissioned", "connection", direction, "nodename", nodename[:NODE_NAME_LENGTH], "DENIED-BY", currentNode[:NODE_NAME_LENGTH])
 	}
 	log.Debug("isNodePermissioned", "connection", direction, "nodename", nodename[:NODE_NAME_LENGTH], "DENIED-BY", currentNode[:NODE_NAME_LENGTH])
 	return false

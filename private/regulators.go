@@ -36,7 +36,6 @@ func (r *RegulatorClient) getClient() (b bool) {
 	b = false
 	var err error
 	if r.client != nil {
-		log.Debug("IPC Client exists")
 		b = true
 		return
 	}
