@@ -80,8 +80,6 @@ func (r *RegulatorClient) IsRegulatorPresent(from string, privateFor []string) (
 		} else {
 			log.Error("Can't seem to connect to an IPC client")
 		}
-		// r.contract = contract
-		// r.client = client
 	}
 
 	// first check if sender is a regulator
@@ -121,15 +119,11 @@ func (r *RegulatorClient) IsWhitelisted(enode string) (bool, error) {
 	var err error
 	if r.getClient() {
 		log.Trace("Contract is empty so trying to instantiate contract object")
-		// if r.client == nil {
-		// 	r.client, err = ethclient.Dial(ipc)
-		// }
 		r.contract, err = des.NewDes(RegContractAddress, r.client)
 		if err != nil || r.client == nil {
 			log.Error("Failed to communicate with permissions contract", "error", err)
 			return isWhitelisted, nil
 		}
-		// r.contract = contract
 	} else {
 		log.Error("Can't seem to connect to an IPC client")
 	}
@@ -150,14 +144,6 @@ func (r *RegulatorClient) IsWhitelisted(enode string) (bool, error) {
 // IsDeployed returns the state of the contract, whether it's been deployed yet.
 func (r *RegulatorClient) IsDeployed() (deployed bool) {
 	deployed = false
-	// if r.client == nil {
-	// 	r.client, err = ethclient.Dial(ipc)
-	// 	defer r.client.Close()
-	// 	if err != nil || r.client == nil {
-	// 		log.Error("Error creating client", "err", err)
-	// 		return
-	// 	}
-	// }
 	if r.getClient() {
 		code, err := r.client.CodeAt(context.Background(), RegContractAddress, nil)
 		if err == nil {
