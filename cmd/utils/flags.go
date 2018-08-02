@@ -517,12 +517,6 @@ var (
 		Value: 50400,
 	}
 
-	// Quorum
-	EnableNodePermissionFlag = cli.BoolFlag{
-		Name:  "permissioned",
-		Usage: "If enabled, the node will allow only a defined list of nodes to connect",
-	}
-
 	// Istanbul settings
 	IstanbulRequestTimeoutFlag = cli.Uint64Flag{
 		Name:  "istanbul.requesttimeout",
@@ -865,8 +859,6 @@ func SetNodeConfig(ctx *cli.Context, cfg *node.Config) {
 	setHTTP(ctx, cfg)
 	setWS(ctx, cfg)
 	setNodeUserIdent(ctx, cfg)
-
-	cfg.EnableNodePermission = ctx.GlobalBool(EnableNodePermissionFlag.Name)
 
 	switch {
 	case ctx.GlobalIsSet(DataDirFlag.Name):

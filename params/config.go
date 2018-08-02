@@ -27,6 +27,7 @@ import (
 var (
 	MainnetGenesisHash = common.HexToHash("0xd4e56740f876aef8c010b86a40d5f56745a118d0906a34e69aec8c0db1cb8fa3") // Mainnet genesis hash to enforce below configs on
 	TestnetGenesisHash = common.HexToHash("0x41941023680923e0fe4d74a34bdac8141f2540e3ae90623718e47d66d1ca4a2d") // Testnet genesis hash to enforce below configs on
+	DesGenesisHash = common.HexToHash("0x328f1dd842eea9f4ed8c96d35d2058b3f7ad74ecd60e28b4a8f4209cf8d00e3a")
 )
 
 var (
@@ -95,6 +96,23 @@ var (
 			ProposerPolicy: 0,
 		},
 	}
+
+	// DES: hardcode DES chain config
+	// TODO: will need to change for production
+
+	// DESChainConfig is the chain parameters to run a node on the DES network.
+	DESChainConfig = &ChainConfig{
+		ChainId:        big.NewInt(337),
+		EIP150Block:    big.NewInt(1),
+		EIP150Hash:     common.HexToHash("0x0000000000000000000000000000000000000000000000000000000000000000"),
+		EIP155Block:    big.NewInt(0),
+		EIP158Block:    big.NewInt(1),
+		Ethash:         new(EthashConfig),
+		ByzantiumBlock: big.NewInt(1),
+		IsQuorum:       true,
+	}
+
+	// DES - end
 
 	// AllEthashProtocolChanges contains every protocol change (EIPs) introduced
 	// and accepted by the Ethereum core developers into the Ethash consensus.

@@ -116,12 +116,6 @@ var AppHelpFlagGroups = []flagGroup{
 		},
 	},
 	{
-		Name: "QUORUM",
-		Flags: []cli.Flag{
-			utils.EnableNodePermissionFlag,
-		},
-	},
-	{
 		Name: "RAFT",
 		Flags: []cli.Flag{
 			utils.RaftModeFlag,

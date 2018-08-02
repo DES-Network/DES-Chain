@@ -1,6 +1,7 @@
 package raft
 
 import (
+	"errors"
 	"fmt"
 	"net/http"
 	"net/url"
@@ -50,6 +51,7 @@ type ProtocolManager struct {
 	snapshotIndex uint64 // The index of the latest snapshot.
 
 	// Remote peer state (protected by mu vs concurrent access via JS)
+	leader       uint16
 	peers        map[uint16]*Peer
 	removedPeers *set.Set // *Permanently removed* peers
 
@@ -87,6 +89,9 @@ type ProtocolManager struct {
 	// Storage
 	quorumRaftDb *leveldb.DB             // Persistent storage for last-applied raft index
 	raftStorage  *etcdRaft.MemoryStorage // Volatile raft storage
+
+	// DES: We need this here for updating permissions
+	pc *p2p.PermissioningClient
 }
 
 //
@@ -101,6 +106,7 @@ func NewProtocolManager(raftId uint16, raftPort uint16, blockchain *core.BlockCh
 	manager := &ProtocolManager{
 		bootstrapNodes:      bootstrapNodes,
 		peers:               make(map[uint16]*Peer),
+		leader:              uint16(etcdRaft.None),
 		removedPeers:        set.New(),
 		joinExisting:        joinExisting,
 		blockchain:          blockchain,
@@ -118,6 +124,7 @@ func NewProtocolManager(raftId uint16, raftPort uint16, blockchain *core.BlockCh
 		raftStorage:         etcdRaft.NewMemoryStorage(),
 		minter:              minter,
 		downloader:          downloader,
+		pc:					 p2p.NewPermissioningClient(),
 	}
 
 	if db, err := openQuorumRaftDb(quorumRaftDbLoc); err != nil {
@@ -125,6 +132,11 @@ func NewProtocolManager(raftId uint16, raftPort uint16, blockchain *core.BlockCh
 	} else {
 		manager.quorumRaftDb = db
 	}
+	
+	// DES: actively monitor permissioned nodes to see which have been 
+	// evicted, so that their connections may be terminated as soon as 
+	// possible.
+	go manager.monitorPermissions()
 
 	return manager, nil
 }
@@ -680,6 +692,10 @@ func (pm *ProtocolManager) eventLoop() {
 		case rd := <-pm.rawNode().Ready():
 			pm.wal.Save(rd.HardState, rd.Entries)
 
+			if rd.SoftState != nil {
+				pm.updateLeader(rd.SoftState.Lead)
+			}
+
 			if snap := rd.Snapshot; !etcdRaft.IsEmptySnap(snap) {
 				pm.saveRaftSnapshot(snap)
 				pm.applyRaftSnapshot(snap)
@@ -880,4 +896,53 @@ func (pm *ProtocolManager) advanceAppliedIndex(index uint64) {
 	pm.mu.Lock()
 	pm.appliedIndex = index
 	pm.mu.Unlock()
+}
+
+func (pm *ProtocolManager) updateLeader(leader uint64) {
+	pm.mu.Lock()
+	defer pm.mu.Unlock()
+
+	pm.leader = uint16(leader)
+}
+
+// The Address for the current leader, or an error if no leader is elected.
+func (pm *ProtocolManager) LeaderAddress() (*Address, error) {
+	pm.mu.RLock()
+	defer pm.mu.RUnlock()
+
+	if minterRole == pm.role {
+		return pm.address, nil
+	} else if l, ok := pm.peers[pm.leader]; ok {
+		return l.address, nil
+	}
+	// We expect to reach this if pm.leader is 0, which is how etcd denotes the lack of a leader.
+	return nil, errors.New("no leader is currently elected")
+}
+
+
+// DES: actively monitor permissions to drop peers if they are no longer
+// permissioned, or add them if they have been permissioned.
+func (pm *ProtocolManager) monitorPermissions() {
+	log.Trace("Check peers for permission")
+	for {
+		direction := "IN/OUT"
+		for raftId, peer := range pm.peers {
+			// remove node if no longer permissioned
+			if !pm.pc.IsNodePermissioned(peer.p2pNode.ID.String(), pm.address.nodeId.String(), pm.p2pServer.DataDir, direction) {
+				log.Trace("Peer no longer permissioned, will be removed", "peer", peer.p2pNode.ID)
+				if !pm.removedPeers.Has(raftId) {
+					pm.disconnectFromPeer(raftId, peer)
+					pm.removedPeers.Add(raftId)
+				}
+			} else {
+				if !pm.isP2pNodeInCluster(peer.p2pNode) {
+				// add node again if whitelisted
+				pm.addPeer(peer.address)
+				log.Trace("Propose addition of node is permissioned", "enode", peer.p2pNode.ID)
+				}
+
+			}
+		}
+		time.Sleep(1 * time.Minute) // TODO: hardcoded for now
+	}
 }

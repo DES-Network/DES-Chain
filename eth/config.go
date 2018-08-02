@@ -112,7 +112,6 @@ type Config struct {
 	EnablePreimageRecording bool
 
 	RaftMode             bool
-	EnableNodePermission bool
 	// Istanbul options
 	Istanbul istanbul.Config
 

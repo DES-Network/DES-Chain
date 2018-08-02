@@ -21,6 +21,11 @@ swarm:
 	@echo "Done building."
 	@echo "Run \"$(GOBIN)/swarm\" to launch swarm."
 
+des-genesis:
+	build/env.sh go run build/ci.go install ./cmd/des-genesis
+	@echo "Done building."
+	@echo "Run \"$(GOBIN)/des-genesis\" to launch des-genesis commandline tool."
+
 all:
 	build/env.sh go run build/ci.go install
 
@@ -48,6 +53,8 @@ devtools:
 	env GOBIN= go get -u github.com/jteeuwen/go-bindata/go-bindata
 	env GOBIN= go get -u github.com/fjl/gencodec
 	env GOBIN= go install ./cmd/abigen
+	# des-network specific tool
+	env GOBIN= go install ./cmd/dev-genesis
 
 # Cross Compilation Targets (xgo)
 
