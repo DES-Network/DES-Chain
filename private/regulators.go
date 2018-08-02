@@ -7,6 +7,7 @@ import (
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"os"
 	"sync"
+	"time"
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/contracts/des"
@@ -15,9 +16,8 @@ import (
 	"github.com/ethereum/go-ethereum/log"
 )
 
-// TODO: refactor
 var (
-	RegContractAddress = common.HexToAddress("0x1932c48b2bF8102Ba33B4A6B545C32236e342f34")
+	DESContractAddress = common.HexToAddress("0x1932c48b2bF8102Ba33B4A6B545C32236e342f34")
 	ErrNoRegulator     = errors.New("invalid transaction because no regulator provided")
 	once               sync.Once
 	ipc                = os.Getenv("IPC")
@@ -30,6 +30,14 @@ type RegulatorClient struct {
 	events    chan types.Log
 	regMap    map[string]bool
 	whitelist map[string]bool
+	deployed bool
+	lastUpdated time.Time
+
+}
+
+// NewRegulatorClient initializes returns the regulator client
+func NewRegulatorClient() *RegulatorClient {
+	return &RegulatorClient{regMap: make(map[string]bool), whitelist: make(map[string]bool), deployed: false}
 }
 
 func (r *RegulatorClient) getClient() (b bool) {
@@ -58,11 +66,6 @@ func (r *RegulatorClient) getClient() (b bool) {
 	return
 }
 
-// NewRegulatorClient initializes returns the regulator client
-func NewRegulatorClient() *RegulatorClient {
-	return &RegulatorClient{regMap: make(map[string]bool), whitelist: make(map[string]bool)}
-}
-
 // IsRegulatorPresent checks if regulator is one of the privateFor
 func (r *RegulatorClient) IsRegulatorPresent(from string, privateFor []string) (isPresent bool, err error) {
 	isPresent = false
@@ -71,7 +74,7 @@ func (r *RegulatorClient) IsRegulatorPresent(from string, privateFor []string) (
 	if r.contract == nil {
 		log.Trace("Contract is empty so trying to instantiate contract object")
 		if r.getClient() {
-			r.contract, err = des.NewDes(RegContractAddress, r.client)
+			r.contract, err = des.NewDes(DESContractAddress, r.client)
 			if err != nil || r.client == nil {
 				log.Error("Failed to communicate with regulator contract", "error", err)
 				return isPresent, nil
@@ -91,6 +94,7 @@ func (r *RegulatorClient) IsRegulatorPresent(from string, privateFor []string) (
 			log.Error("Couldn't communicate with regulator contract", "error", err)
 		} else if isPresent {
 			r.regMap[from] = true
+			r.lastUpdated = time.Now()
 			return
 		}
 	}
@@ -109,6 +113,7 @@ func (r *RegulatorClient) IsRegulatorPresent(from string, privateFor []string) (
 			break
 		}
 	}
+	go r.update()
 	return
 }
 
@@ -118,7 +123,7 @@ func (r *RegulatorClient) IsWhitelisted(enode string) (bool, error) {
 	var err error
 	if r.getClient() {
 		log.Trace("Contract is empty so trying to instantiate contract object")
-		r.contract, err = des.NewDes(RegContractAddress, r.client)
+		r.contract, err = des.NewDes(DESContractAddress, r.client)
 		if err != nil || r.client == nil {
 			log.Error("Failed to communicate with permissions contract", "error", err)
 			return isWhitelisted, nil
@@ -135,26 +140,45 @@ func (r *RegulatorClient) IsWhitelisted(enode string) (bool, error) {
 		log.Error("Couldn't communicate with regulator contract", "error", err)
 	} else if isWhitelisted {
 		r.whitelist[enode] = true
+		r.lastUpdated = time.Now()
 	}
-
+	go r.update()
 	return isWhitelisted, nil
 }
 
 // IsDeployed returns the state of the contract, whether it's been deployed yet.
-func (r *RegulatorClient) IsDeployed() (deployed bool) {
-	deployed = false
+func (r *RegulatorClient) IsDeployed() bool {
+	if !r.deployed {
 	if r.getClient() {
-		code, err := r.client.CodeAt(context.Background(), RegContractAddress, nil)
+		code, err := r.client.CodeAt(context.Background(), DESContractAddress, nil)
 		if err == nil {
-			deployed = bytes.Equal(code, common.FromHex(des.DESByteCode))
-			log.Debug("Checking whether contract has been deployed", "deployed", deployed, "codeLength", len(code))
-			return
+			r.deployed = bytes.Equal(code, common.FromHex(des.DESByteCode))
+			log.Debug("Checking whether DES contract has been deployed", "deployed", r.deployed, "codeLength", len(code))
 		} else {
 			log.Error("Can't find contract code", "error", err)
 		}
 	} else {
-		log.Error("Can't seem to connect to an IPC client")
+		log.Trace("Can't seem to connect to an IPC client. Maybe it's too early?")
 	}
-	log.Info("IsDeployed", "deployed", deployed)
-	return
+	}
+	log.Trace("IsDeployed", "deployed", r.deployed)
+	return r.deployed
+}
+
+// make sure the maps don't get stagnant, so renew them after ten minutes or so
+func (r *RegulatorClient) update() {
+	defer func() {
+        // recover from panic if one occured.
+		if err := recover(); err != nil { //catch
+            log.Error("Exception", "error", err)
+        }
+    }()
+	d, err := time.ParseDuration("10m")
+	if err == nil {
+	// TODO: time should be configurable
+	if time.Now().Sub(r.lastUpdated) >  d {
+		r.whitelist = make(map[string]bool)
+		r.regMap = make(map[string]bool)
+	}
+    }
 }

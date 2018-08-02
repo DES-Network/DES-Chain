@@ -925,7 +925,6 @@ func (pm *ProtocolManager) LeaderAddress() (*Address, error) {
 func (pm *ProtocolManager) monitorPermissions() {
 	log.Trace("Check peers for permission")
 	for {
-		time.Sleep(1 * time.Minute) // TODO: hardcoded for now
 		direction := "IN/OUT"
 		for raftId, peer := range pm.peers {
 			// remove node if no longer permissioned
@@ -944,5 +943,6 @@ func (pm *ProtocolManager) monitorPermissions() {
 
 			}
 		}
+		time.Sleep(1 * time.Minute) // TODO: hardcoded for now
 	}
 }
