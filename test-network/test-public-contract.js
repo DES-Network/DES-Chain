@@ -13,17 +13,5 @@ console.log(result);
 console.log("Change the value and check again");
 
 contractInstance.set(55, {gas: 0x47b760, from:a});
-// var getData = contractInstance.set.getData(550);
-// //finally paas this data parameter to send Transaction
-// web3.eth.sendTransaction({to:address, from:a, data: getData, gas: 0x47b760}, function (err, res) {
-// 	if (!err) {
-// 		console.log(res)
-// 	}
-// });
-// console.log(getData);
-// setTimeout(function(){
-// 	result = contractInstance.storedData();
-// 	console.log(result);
-// }, 5000);
 
 

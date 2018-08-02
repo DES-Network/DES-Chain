@@ -16,7 +16,7 @@ IPC=$BASE_PATH/qdata/dd5/geth.ipc PRIVATE_CONFIG=qdata/c5/tm.ipc nohup ./bin/get
 set +v
 
 echo
-echo "Great! This means that a test DES network has been successfully setup, with three nodes, where Node 1 is the only Regulator!"
+echo "Great! This means that a test DES network has been successfully setup, with five nodes, where Node 1 is the only Regulator!"
 echo "If you want to see the logs, you can navigate to 'qdata/logs', or you can run e.g. 'geth attach qdata/dd1/geth.ipc' to interact with a Geth console."
 echo "To deploy the DES network contract that will keep track of regulators and whitelisted nodes, run './runscript.sh deploy-and-init.js'."
 echo "Note that you will not be able to make any private transactions or add nodes to the whitelist until this is done."

@@ -31,11 +31,11 @@ Given below is a description of the scripts, what they do and the flow of how yo
 
   3. `deploy-and-init.js`: Deploy the DES network contract that will help add/remove and keep track of the regulators in the network and the nodes in the network. Since only permissioned nodes are allowed in the DES network, the owner will have to add any new nodes to this contract to ensure their participation in the network. 
 
-Note that this is written in javascript and requires attachment to a geth node for execution. We have created a script that will make this easy, so you can run this as `./runscript.sh deploy-and-init.js`.
+  Note that this is written in javascript and requires attachment to a geth node for execution. We have created a script that will make this easy, so you can run this as `./runscript.sh deploy-and-init.js`.
 
-  This means that your DES network is up and running, and since the contract is also up, this ensures that DES permissioning and transaction restrictions are activated. 
+This means that your DES network is up and running, and since the contract is also up, this ensures that DES permissioning and transaction restrictions are activated. 
 
-  **NOTE: All logs and temporary data will be written to the `qdata` folder.**
+**NOTE: All logs and temporary data will be written to the `qdata` folder.**
 
 ## Play around with DES
   The following are some scripts you can use to play around with the DES network.
@@ -63,8 +63,64 @@ In each terminal, ensure you are in the test-network dir before running the belo
 There are two private contract scripts available. The `wrong-private-contract.js` is the one that doesn't contain the Regulator key in either the `privateFrom` or the `privateTo` fields, and is, therefore, rejected. You can try to run it as `./runscript.sh wrong-private-contract.js`, which will yield the following result:
 
 ```
+err creating contract Error: invalid transaction because no regulator provided
 
 ```
+
+When you use `private-contract.js`, though, it works out without a hitch. Once it has been sent to mine. Note that this transaction is between `Node 1` and `Node 2`. The rest of the nodes shouldn't be privy to it. 
+
+Please run `./runscript.sh private-contract.js` and copy the transaction hash it prints out. Then attach to geth console for `Node 1`, `Node 2` and `Node 3` in different terminals using `./bin/geth attach path/to/geth.ipc`.
+
+First, we need to get the contract's address, so we'll use the following command using the transaction hash for the contract submission:
+
+```
+> eth.getTransactionReceipt("0x6f6...")
+
+```
+Note that `0x6f6...` is where you paste the transaction hash. This will return something similar to the following result:
+
+```
+{
+  blockHash: "0xd11326c5501af22a9228742928b3c5ce71108432128d6b014fc398b74e0ef94d",
+  blockNumber: 8,
+  contractAddress: "0x4d3bfd7821e237ffe84209d8e638f9f309865b87",
+  cumulativeGasUsed: 0,
+  from: "0xed9d02e382b34818e88b88a309c7fe71e65f419d",
+  gasUsed: 0,
+  logs: [],
+  logsBloom: "0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+  status: "0x1",
+  to: null,
+  transactionHash: "0x6f69adef793d32249ab0ae0f8202d50f87c5e0c526999f84ced4863aae2998e4",
+  transactionIndex: 0
+}
+
+```
+
+This can be done on either terminal. Now, you want to copy the `contractAddress`, so we can interact with the contract. You will name the `contractAddress` as `var address` and execute the following in all terminals:
+
+```
+var address = "0x4d3bfd7821e237ffe84209d8e638f9f309865b87";
+var abi = [{"constant":true,"inputs":[],"name":"storedData","outputs":[{"name":"","type":"uint256"}],"payable":false,"type":"function"},{"constant":false,"inputs":[{"name":"x","type":"uint256"}],"name":"set","outputs":[],"payable":false,"type":"function"},{"constant":true,"inputs":[],"name":"get","outputs":[{"name":"retVal","type":"uint256"}],"payable":false,"type":"function"},{"inputs":[{"name":"initVal","type":"uint256"}],"payable":false,"type":"constructor"}];
+var private = eth.contract(abi).at(address)
+```
+
+* In terminal window 1 (node 1)
+```
+> private.get()
+42
+```
+* In terminal window 2 (node 2)
+```
+> private.get()
+42
+``` 
+* In terminal window 3 (node 3) - not privy to the contract
+```
+> private.get()
+0
+```
+
 
 ## Permissions
 
@@ -159,3 +215,4 @@ And if you were to attach to geth console for `Node 5` using `geth attach qdata/
 > admin.peers
 []
 ```
+Exit this console and run `./runscript.sh whitelist.sh`. This will make `Node 5` permissioned. Wait a minute or so and then check again for `admin.peers` on `Node 5`. You will find that it now has peers again.
