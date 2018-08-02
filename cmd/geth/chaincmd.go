@@ -196,7 +196,7 @@ func initGenesis(ctx *cli.Context) error {
 			utils.Fatalf("Failed to write genesis block: %v", err)
 		}
 
-		// DES - begin
+		// DES: write our genesis header for setup purposes.
 		// add a second path for writing out genesis
 		outPath := ctx.Args().Get(1)
 		if outPath == "" {

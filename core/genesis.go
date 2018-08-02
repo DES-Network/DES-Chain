@@ -367,7 +367,7 @@ func DevGenesisBlock() *Genesis {
 }
 
 
-// DES - begin
+// DES: default DES genesis block config
 
 // DefaultDesGenesisBlock returns the 'geth --des' genesis block.
 func DefaultDesGenesisBlock() *Genesis {

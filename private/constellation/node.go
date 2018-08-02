@@ -14,7 +14,6 @@ import (
 	"os/exec"
 	"strings"
 	"time"
-	"github.com/ethereum/go-ethereum/log"
 
 )
 
@@ -49,10 +48,8 @@ func unixClient(socketPath string) *http.Client {
 }
 
 func RunNode(socketPath string) error {
-	log.Info("Trying to connect to socket")
 	c := unixClient(socketPath)
 	res, err := c.Get("http+unix://c/upcheck")
-	log.Info("Socket Response:", "res", res)
 	if err != nil {
 		return err
 	}

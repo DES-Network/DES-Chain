@@ -50,6 +50,9 @@ func main() {
 	case *file != "" && *defaultConfig:
 		fmt.Println("Genesis file given. Overriding default configuration.")
 		*defaultConfig = false
+	default:
+		*defaultConfig = true
+		fmt.Println("Default configuration will be used.")
 	}
 
 	// TODO: (HACK) hardcoded the nonce here

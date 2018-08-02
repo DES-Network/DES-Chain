@@ -16,9 +16,11 @@ const (
 	PERMISSIONED_CONFIG = "permissioned-nodes.json"
 )
 
+// DES: required for handling permissions from contract
 type PermissioningClient struct {
 	r *private.RegulatorClient
 }
+
 
 // NewPermissioningClient will create a permissioning client
 func NewPermissioningClient() *PermissioningClient {
@@ -32,6 +34,7 @@ func (p *PermissioningClient) IsNodePermissioned(nodename string, currentNode st
 	var permissionedList []string
 	nodes := parsePermissionedNodes(datadir)
 
+	// DES: checking if contract deployed, else operate like Quorum
 	if !p.r.IsDeployed() {
 		log.Trace("Contract not yet deployed, take permissioned list for granted")
 		for _, v := range nodes {
@@ -50,6 +53,7 @@ func (p *PermissioningClient) IsNodePermissioned(nodename string, currentNode st
 			}
 		}
 	}
+	// DES - end
 	log.Trace("isNodePermissioned", "permissionedList", permissionedList)
 	for _, v := range permissionedList {
 		if v == nodename {

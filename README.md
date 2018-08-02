@@ -25,7 +25,7 @@ Note: The QuorumChain consensus algorithm is not yet supported by this release.
 
 ## Architecture
 
-<a href="https://github.com/jpmorganchase/quorum/wiki/Transaction-Processing#private-transaction-process-flow">![Quorum privacy architecture](https://github.com/jpmorganchase/quorum-docs/raw/master/images/QuorumTransactionProcessing.JPG)</a>
+<a href="https://github.com/DES-Network/des-quorum/wiki/Transaction-Processing#private-transaction-process-flow">![Quorum privacy architecture](https://github.com/jpmorganchase/quorum-docs/raw/master/images/QuorumTransactionProcessing.JPG)</a>
 
 The above diagram is a high-level overview of the privacy architecture used by DES Quorum. For more in-depth discussion of the components, refer to the [wiki](https://github.com/DES-Network/des-quorum/wiki/) pages.
 
@@ -46,7 +46,7 @@ You can get a better understanding of how DES operates if you went through the f
 
 ## See also
 
-* [Quorum](https://github.com/DES-Network/des-quorum): official DES-Quorum repository
+* [DES-Quorum](https://github.com/DES-Network/des-quorum): official DES-Quorum repository
 * [Constellation](https://github.com/jpmorganchase/constellation): peer-to-peer encrypted message exchange for transaction privacy
 * [Raft Consensus Documentation](raft/doc.md)
 * [Istanbul BFT Consensus Documentation](https://github.com/ethereum/EIPs/issues/650): [RPC API](https://github.com/getamis/go-ethereum/wiki/RPC-API) and [technical article](https://medium.com/getamis/istanbul-bft-ibft-c2758b7fe6ff)
@@ -75,10 +75,6 @@ DES Quorum is built on open source and we invite you to contribute enhancements.
 
 ## License
 
-The go-ethereum library and quorum (i.e. all code outside of the `cmd` directory) is licensed under the
-[GNU Lesser General Public License v3.0](https://www.gnu.org/licenses/lgpl-3.0.en.html), also
-included in our repository in the `COPYING.LESSER` file.
+The go-ethereum library, quorum and des-quorum (i.e. all code outside of the `cmd` directory) are licensed under the [GNU Lesser General Public License v3.0](https://www.gnu.org/licenses/lgpl-3.0.en.html), also included in our repository in the `COPYING.LESSER` file.
 
-The go-ethereum binaries (i.e. all code inside of the `cmd` directory) is licensed under the
-[GNU General Public License v3.0](https://www.gnu.org/licenses/gpl-3.0.en.html), also included
-in our repository in the `COPYING` file.
+The go-ethereum binaries (i.e. all code inside of the `cmd` directory) is licensed under the [GNU General Public License v3.0](https://www.gnu.org/licenses/gpl-3.0.en.html), also included in our repository in the `COPYING` file.

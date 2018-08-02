@@ -97,8 +97,8 @@ var (
 		},
 	}
 
-	// DES - begin
-	// TODO: may need to change for production
+	// DES: hardcode DES chain config
+	// TODO: will need to change for production
 
 	// DESChainConfig is the chain parameters to run a node on the DES network.
 	DESChainConfig = &ChainConfig{

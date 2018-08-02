@@ -216,3 +216,7 @@ And if you were to attach to geth console for `Node 5` using `geth attach qdata/
 []
 ```
 Exit this console and run `./runscript.sh whitelist.sh`. This will make `Node 5` permissioned. Wait a minute or so and then check again for `admin.peers` on `Node 5`. You will find that it now has peers again.
+
+# References
+
+Modified Quorum's [7nodes](https://github.com/jpmorganchase/quorum-examples/tree/master/examples/7nodes) example.
