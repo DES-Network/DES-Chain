@@ -30,4 +30,21 @@ cp keys/key3 qdata/dd3/keystore
 cp raft/nodekey3 qdata/dd3/geth/nodekey
 geth --datadir qdata/dd3 init genesis.json
 
+echo "[*] Configuring node 4"
+mkdir -p qdata/dd4/{keystore,geth}
+cp permissioned-nodes.json qdata/dd4/static-nodes.json
+cp permissioned-nodes.json qdata/dd4/permissioned-nodes.json
+cp keys/key4 qdata/dd4/keystore
+cp raft/nodekey4 qdata/dd4/geth/nodekey
+geth --datadir qdata/dd4 init genesis.json
+
+echo "[*] Configuring node 5"
+mkdir -p qdata/dd5/{keystore,geth}
+cp permissioned-nodes.json qdata/dd5/static-nodes.json
+cp permissioned-nodes.json qdata/dd5/permissioned-nodes.json
+cp keys/key5 qdata/dd5/keystore
+cp raft/nodekey5 qdata/dd5/geth/nodekey
+geth --datadir qdata/dd5 init genesis.json
+
 echo "Cleaned up previous data, which includes configuration files and blockchain data, and created new directories and configuration files required for geth and constellation nodes."
+echo "Now, when you start the network, it will start one from scratch. Use the './start-des-network.sh' script for this purpose"
