@@ -1,16 +1,16 @@
-# DES-Network
+# DES-Quorum
 
-The DES Network is a fork of Quorum that adds some restrictions to its protocol, by limiting permissioned nodes to a curated whitelist controlled by a set of Regulators. It also ensures that all private transactions are privy to at least one Regulator.
+DES Quorum is a fork of Quorum that adds some restrictions to its protocol, by limiting permissioned nodes to a curated whitelist controlled by a set of Regulators. It also ensures that all private transactions are privy to at least one Regulator.
 
 These restrictions are controlled via a smart contract that is deployed after the network is launched by the network owner.
 
 Key enhancements over Quorum:
-  * __Regulators__ - DES requires Regulators in the network, which are considered central authorities responsible for providing mediation, if required.
-  * __Permissioned__ - DES enhances Quorum's permissioning to make permissioned nodes mandatory and adds a mechanism whereby only Regulators may whitelist a node that wishes to participate in the network and only nodes that are whitelisted would be part of the network.
+  * __Regulators__ - DES Quorum requires Regulators in the network, which are considered central authorities responsible for providing mediation, if required.
+  * __Permissioned__ - DES Quorum enhances Quorum's permissioning to make permissioned nodes mandatory and adds a mechanism whereby only Regulators may whitelist a node that wishes to participate in the network and only nodes that are whitelisted would be part of the network.
   
 ## Quorum
 
-As mentioned above, DES is based on Quorum, which is a fork of [go-ethereum](https://github.com/ethereum/go-ethereum) and is updated in line with Quorum releases.
+As mentioned above, DES Quorum is based on [Quorum](https://github.com/jpmorganchase/quorum), and is updated in line with Quorum releases. 
 
 Quorum's enhancements over go-ethereum:
 
@@ -27,14 +27,14 @@ Note: The QuorumChain consensus algorithm is not yet supported by this release.
 
 <a href="https://github.com/jpmorganchase/quorum/wiki/Transaction-Processing#private-transaction-process-flow">![Quorum privacy architecture](https://github.com/jpmorganchase/quorum-docs/raw/master/images/QuorumTransactionProcessing.JPG)</a>
 
-The above diagram is a high-level overview of the privacy architecture used by Quorum. For more in-depth discussion of the components, refer to the [wiki](https://github.com/jpmorganchase/quorum/wiki/) pages.
+The above diagram is a high-level overview of the privacy architecture used by DES Quorum. For more in-depth discussion of the components, refer to the [wiki](https://github.com/DES-Network/des-quorum/wiki/) pages.
 
 ## Quickstart
 
-The quickest way to get started with DES is to clone this repo and navigate to the test-network folder:
+The quickest way to get started with DES Quorum is to clone this repo and navigate to the test-network folder:
 
 ```sh
-git clone https://github.com/jpmorganchase/quorum-examples
+git clone https://github.com/DES-Network/des-quorum
 cd test-network
 ```
 
@@ -42,11 +42,11 @@ There you will find detailed instructions on how to set up a test network and te
 
 ## Further Reading
 
-Further documentation can be found in the [docs](docs/) folder and on the [wiki](https://github.com/jpmorganchase/quorum/wiki/).
+You can get a better understanding of how DES operates if you went through the following documentation can be found in the [docs](docs/) folder and on the [wiki](https://github.com/DES-Network/des-quorum/wiki/).
 
 ## See also
 
-* [Quorum](https://github.com/jpmorganchase/quorum): official Quorum repository
+* [Quorum](https://github.com/DES-Network/des-quorum): official DES-Quorum repository
 * [Constellation](https://github.com/jpmorganchase/constellation): peer-to-peer encrypted message exchange for transaction privacy
 * [Raft Consensus Documentation](raft/doc.md)
 * [Istanbul BFT Consensus Documentation](https://github.com/ethereum/EIPs/issues/650): [RPC API](https://github.com/getamis/go-ethereum/wiki/RPC-API) and [technical article](https://medium.com/getamis/istanbul-bft-ibft-c2758b7fe6ff)
@@ -57,7 +57,7 @@ Further documentation can be found in the [docs](docs/) folder and on the [wiki]
 
 ## Third Party Tools/Libraries
 
-The following tools have been created by Third Parties for Quorum, however, most of them are still compatible with DES:
+The following tools have been created by Third Parties for Quorum, however, most of them are still compatible with DES Quorum:
 
 * [Quorum Blockchain Explorer](https://github.com/blk-io/blk-explorer-free) - a Blockchain Explorer for Quorum which supports viewing private transactions
 * [Quorum-Genesis](https://github.com/davebryson/quorum-genesis) - A simple CL utility for Quorum to help populate the genesis file with voters and makers
@@ -69,13 +69,13 @@ The following tools have been created by Third Parties for Quorum, however, most
 
 ## Contributing
 
-Thank you for your interest in contributing to DES Network!
+Thank you for your interest in contributing to DES Quorum!
 
-DES Network is built on open source and we invite you to contribute enhancements. Upon review you will be required to complete a Contributor License Agreement (CLA) before we are able to merge. If you have any questions about the contribution process, please feel free to send an email to [des_info@block360.org](mailto:des_info@block360.org).
+DES Quorum is built on open source and we invite you to contribute enhancements. Upon review you will be required to complete a Contributor License Agreement (CLA) before we are able to merge. If you have any questions about the contribution process, please feel free to send an email to [des_info@block360.org](mailto:des_info@block360.org).
 
 ## License
 
-The go-ethereum library (i.e. all code outside of the `cmd` directory) is licensed under the
+The go-ethereum library and quorum (i.e. all code outside of the `cmd` directory) is licensed under the
 [GNU Lesser General Public License v3.0](https://www.gnu.org/licenses/lgpl-3.0.en.html), also
 included in our repository in the `COPYING.LESSER` file.
 

@@ -1,6 +1,6 @@
 # Test DES Network
 
-This folder contains scripts to help configure a test DES network and allow you to evaluate the functionality with easy to use, verbose examples. This test network contains 3 nodes, namely `Node 1`, `Node 2` and `Node 3`. `Node 1` is the a Regulator. 
+This folder contains scripts to help configure a test DES network and allow you to evaluate the functionality with easy to use, verbose examples. This test network contains 5 nodes, out of which `Node 1` is the Regulator. 
 
 Initially, the network permissioning works like Quorum, where every node that is listed in the `permissioned-nodes.js` file, gets to participate in the network. However, after the deployment of the DES contract, which keeps track of permissioned nodes and the regulators in the network, the permissioning will be handled by the DES contract.
 
@@ -10,12 +10,12 @@ Since the binaries required for running these scripts are inside the bin folder,
 
 However, this has only been tested on a Linux system (Ubuntu 16.04), so you might want to make sure you try these scripts out on it. Otherwise, you will have to provide `geth` and `constellation-node` binaries for your platform and place them into the `bin` folder to effectively use these scripts. 
 
-In order to get these scripts, you will have to use `git`, so if you don’t have it installed already, please use `apt-get install git`. You shouldn’t need to install anything else, since all the required binaries are inside the `bin` directory. **(Needs confirmation)**
+In order to get these scripts, you will have to use `git`, so if you don’t have it installed already, please use `apt-get install git`. You shouldn’t need to install anything else, since all the required binaries are inside the `bin` directory. 
 
   1. Clone this repository in your workspace using this command:
-  `git clone https://github.com/DES-Network/quorum.git`
-  This will create a `quorum` directory in your workspace, which contains the source code, as well as the test scripts.
-  2. If you want to setup or use the test network, please navigate to the `test-network` subdirectory using this command: `cd quorum/test-network`. Note that all the commands shown in this document assume that you are in this directory.
+  `git clone https://github.com/DES-Network/des-quorum.git`
+  This will create a `des-quorum` directory in your workspace, which contains the source code, as well as the test scripts.
+  2. If you want to setup or use the test network, please navigate to the `test-network` subdirectory using this command: `cd des-quorum/test-network`. Note that all the commands shown in this document assume that you are in this directory.
 
 ## Network Setup
 
@@ -31,7 +31,7 @@ Given below is a description of the scripts, what they do and the flow of how yo
 
   3. `deploy-and-init.js`: Deploy the DES network contract that will help add/remove and keep track of the regulators in the network and the nodes in the network. Since only permissioned nodes are allowed in the DES network, the owner will have to add any new nodes to this contract to ensure their participation in the network. 
 
-Note that this is written in javascript and requires attachment to a geth node for execution. We have created a script that will make this easy, so you can run this as `./run-as-owner.sh deploy-and-init.js`.
+Note that this is written in javascript and requires attachment to a geth node for execution. We have created a script that will make this easy, so you can run this as `./runscript.sh deploy-and-init.js`.
 
   This means that your DES network is up and running, and since the contract is also up, this ensures that DES permissioning and transaction restrictions are activated. 
 
@@ -45,6 +45,7 @@ Note that this is written in javascript and requires attachment to a geth node f
   - `private-contract.js`: This is the correct private contract deployment script. The contract creation will be allowed as the regulator's key `BULeR8JyUWhiuuCMU/HLA0Q5pzkYT+cHII3ZKBey3Bo=` is now party to the transaction.
   - `whitelist.js`: This helps you whitelist or add a given enode address, so that it has permission to participate in the network.
   - `blacklist.js`: This helps you blacklist or remove a given enode address, so that it no longer has permission to participate in the network.
+  - `runscript.sh`: This will allow you to execute a JS script with the owner's address.
   - `stop.sh`: Stop all `constellation` and `geth` nodes.
 
 
@@ -54,9 +55,16 @@ In each terminal, ensure you are in the test-network dir before running the belo
 
 * If you aren't already running the test-network example, in terminal 1 run 
 ``$ ./init.sh `` followed by ``$ ./start-des-network.sh ``
-* In terminal 1 run ``$ geth attach ipc:qdata/dd1/geth.ipc``
-* In terminal 2 run ``$ geth attach ipc:qdata/dd2/geth.ipc``
-* In terminal 3 run ``$ geth attach ipc:qdata/dd3/geth.ipc``
+* In a new terminal navigate to the `des-quorum/test-net` directory and run the following: ``$ ./bin/geth attach qdata/dd1/geth.ipc``, where `qdata/dd1/geth.ipc` can be replaced by the respective data directory of the node you want to attach to, like `qdata/dd2/geth.ipc`, for connecting to Node 2, etc.
+
+
+## Private Transactions
+
+There are two private contract scripts available. The `wrong-private-contract.js` is the one that doesn't contain the Regulator key in either the `privateFrom` or the `privateTo` fields, and is, therefore, rejected. You can try to run it as `./runscript.sh wrong-private-contract.js`, which will yield the following result:
+
+```
+
+```
 
 ## Permissions
 
@@ -70,16 +78,16 @@ This example demonstrates the following:
 ### Verify only permissioned nodes are connected to the network.
 
 Attach to the individual nodes via
-  `geth attach path/to/geth.ipc` and use `admin.peers` to check the connected nodes.
+  `./bin/geth attach path/to/geth.ipc` and use `admin.peers` to check the connected nodes.
 
 ```
-❯ geth attach qdata/dd1/geth.ipc
+❯ ./geth attach qdata/dd1/geth.ipc
 Welcome to the Geth JavaScript console!
 
 instance: Geth/v1.7.2-stable/darwin-amd64/go1.9.2
 coinbase: 0xed9d02e382b34818e88b88a309c7fe71e65f419d
 at block: 1 (Mon, 29 Oct 47909665359 22:09:51 EST)
- datadir: /Users/joel/jpm/quorum-examples/examples/7nodes/qdata/dd1
+ datadir: /home/xyz/workspace/des-quorum/test-network/qdata/dd1
  modules: admin:1.0 debug:1.0 eth:1.0 miner:1.0 net:1.0 personal:1.0 raft:1.0 rpc:1.0 txpool:1.0 web3:1.0
 
 > admin.peers
@@ -109,7 +117,7 @@ You can also inspect the log files under `qdata/logs/*.log` for further diagnost
 
 Permissioning is granted based on the remote key (enode address) of the geth node. The pre-generated remote keys are specified in the permissioned-nodes.json and are placed under individual nodes <datadir>.
 
-Once the DES contract is deployed, enabling and disabling of permissions is handled by the DES contract. See the  `whitelist.js` script to see how to interact with the contract. You will have to run it as: `./run-as-owner.sh whitelist.js` to include the mentioned enable the node's permissions. To remove a node from the whitelist, use `./run-as-owner.sh blacklist.js`.
+Once the DES contract is deployed, enabling and disabling of permissions is handled by the DES contract. See the  `whitelist.js` script to see how to interact with the contract. You will have to run it as: `./runscript.sh whitelist.js` to include the mentioned enable the node's permissions. To remove a node from the whitelist, use `./runscript.sh blacklist.js`.
 
 ### Testing Permissions
 
@@ -119,7 +127,7 @@ Once you have the console, check for your self how many nodes it has initially, 
 
 Now exit this console using `exit`.
 
-Once you are back in the `test-network` directory, deploy the DES contract via `./run-as-owner.sh deploy-and-init.js`, which deploys the DES contract and initializes it so that the permissioned nodes are only `Node 1` and `Node 2`. Give the contract time to be deployed and around a minute or so for the permission update check, then reattach to `Node 1`'s geth and try out the `admin.peers` again. It should have removed `Node 3` as a peer, which had the enode id `579f786d4e2830bbcc02815a27e8a9bacccc9605df4dc6f20bcc1a6eb391e7225fff7cb83e5b4ecd1f3a94d8b733803f2f66b7e871961e7b029e22c155c3a778`. 
+Once you are back in the `test-network` directory, deploy the DES contract via `./runscript.sh deploy-and-init.js`, which deploys the DES contract and initializes it so that the permissioned nodes are only the first four nodes. Give the contract time to be deployed and around a minute or so for the permission update check, then reattach to `Node 1`'s geth and try out the `admin.peers` command again. It should have removed `Node 5` as a peer, so there will be only three peers remaining for the permissioned nodes, aka `Node 1`, `Node 2`, `Node 3` and `Node 4`. 
 
 ```
 > admin.peers
@@ -138,15 +146,16 @@ Once you are back in the `test-network` directory, deploy the DES contract via `
         version: 63
       }
     }
-}]
+}
+...
+]
 
 
 ```
 
-And if you were to attach to geth console for `Node 3` using `geth attach qdata/dd3/geth.ipc`, you would find that it no longer has any peers, since it would now be unable to connect to either `Node 1` or `Node 2`:
+And if you were to attach to geth console for `Node 5` using `geth attach qdata/dd5/geth.ipc`, you would find that it no longer has any peers, since it would now be unable to connect to any node in the cluster:
 
 ```
 > admin.peers
 []
 ```
-
