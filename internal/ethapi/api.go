@@ -209,21 +209,19 @@ func (s *PublicAccountAPI) Accounts() []common.Address {
 type PrivateAccountAPI struct {
 	am        *accounts.Manager
 	nonceLock *AddrLocker
-	p *private.RegulatorClient // DES
+	// DES: we need this here to ensure the presence of regulator in every
+	// private transaction
+	p *private.RegulatorClient
 	b         Backend
 }
 
 // NewPrivateAccountAPI create a new PrivateAccountAPI.
 func NewPrivateAccountAPI(b Backend, nonceLock *AddrLocker) *PrivateAccountAPI {
-	p, err := private.NewRegulatorClient()
-	if err != nil {
-		log.Warn("Error procuring regulator client", "error", err)
-	}
 	return &PrivateAccountAPI{
 		am:        b.AccountManager(),
 		nonceLock: nonceLock,
 		b:         b,
-		p: p,
+		p: private.NewRegulatorClient(),
 	}
 }
 
@@ -369,7 +367,7 @@ func (s *PrivateAccountAPI) SendTransaction(ctx context.Context, args SendTxArgs
 	isPrivate := args.PrivateFor != nil
 	if isPrivate {
 		log.Info("sending private tx", "data", fmt.Sprintf("%x", data), "privatefrom", args.PrivateFrom, "privatefor", args.PrivateFor)
-		// DES - begin
+		// DES: this check was added to ensure a regulator is present in private transaction
 		regulatorPresent, err := s.p.IsRegulatorPresent(args.PrivateFrom, args.PrivateFor)
 		if err != nil {
 			return common.Hash{}, err
@@ -377,7 +375,7 @@ func (s *PrivateAccountAPI) SendTransaction(ctx context.Context, args SendTxArgs
 			log.Error("Transaction failed", "error", private.ErrNoRegulator)
 			return common.Hash{}, private.ErrNoRegulator
 		}
-		// DES - end
+
 		data, err = private.P.Send(data, args.PrivateFrom, args.PrivateFor)
 		log.Info("sent private tx", "data", fmt.Sprintf("%x", data), "privatefrom", args.PrivateFrom, "privatefor", args.PrivateFor)
 		if err != nil {
@@ -915,16 +913,15 @@ func newRPCTransactionFromBlockHash(b *types.Block, hash common.Hash) *RPCTransa
 // PublicTransactionPoolAPI exposes methods for the RPC interface
 type PublicTransactionPoolAPI struct {
 	b         Backend
+	// DES: we need this here to ensure the presence of regulator in every
+	// private transaction
 	p         *private.RegulatorClient
 	nonceLock *AddrLocker
 }
 
 // NewPublicTransactionPoolAPI creates a new RPC service with methods specific for the transaction pool.
 func NewPublicTransactionPoolAPI(b Backend, nonceLock *AddrLocker) *PublicTransactionPoolAPI {
-	p, err := private.NewRegulatorClient()
-	if err != nil {
-		log.Warn("Error procuring regulator client", "error", err)
-	}
+	p := private.NewRegulatorClient()
 	return &PublicTransactionPoolAPI{b, p, nonceLock}
 }
 
@@ -1174,7 +1171,7 @@ func (s *PublicTransactionPoolAPI) SendTransaction(ctx context.Context, args Sen
 	if isPrivate {
 		//Send private transaction to local Constellation node
 		log.Info("sending private tx", "data", fmt.Sprintf("%x", data), "privatefrom", args.PrivateFrom, "privatefor", args.PrivateFor)
-		// DES - begin
+		// DES: this check was added to ensure a regulator is present in private transaction
 		regulatorPresent, err := s.p.IsRegulatorPresent(args.PrivateFrom, args.PrivateFor)
 		if err != nil {
 			return common.Hash{}, err

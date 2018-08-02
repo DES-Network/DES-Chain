@@ -59,8 +59,8 @@ func (r *RegulatorClient) getClient() (b bool) {
 }
 
 // NewRegulatorClient initializes returns the regulator client
-func NewRegulatorClient() (*RegulatorClient, error) {
-	return &RegulatorClient{regMap: make(map[string]bool), whitelist: make(map[string]bool)}, nil
+func NewRegulatorClient() *RegulatorClient {
+	return &RegulatorClient{regMap: make(map[string]bool), whitelist: make(map[string]bool)}
 }
 
 // IsRegulatorPresent checks if regulator is one of the privateFor

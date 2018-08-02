@@ -22,13 +22,12 @@ type PermissioningClient struct {
 
 // NewPermissioningClient will create a permissioning client
 func NewPermissioningClient() *PermissioningClient {
-	client, _ := private.NewRegulatorClient()
-	log.Trace("Permissioning: Get Reg Client", "client", client)
+	client := private.NewRegulatorClient()
 	return &PermissioningClient{client}
 }
 
 // check if a given node is permissioned to connect to the change
-func (p *PermissioningClient) isNodePermissioned(nodename string, currentNode string, datadir string, direction string) bool {
+func (p *PermissioningClient) IsNodePermissioned(nodename string, currentNode string, datadir string, direction string) bool {
 
 	var permissionedList []string
 	nodes := parsePermissionedNodes(datadir)

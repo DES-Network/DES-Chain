@@ -89,6 +89,9 @@ type ProtocolManager struct {
 	// Storage
 	quorumRaftDb *leveldb.DB             // Persistent storage for last-applied raft index
 	raftStorage  *etcdRaft.MemoryStorage // Volatile raft storage
+
+	// DES: We need this here for updating permissions
+	pc *p2p.PermissioningClient
 }
 
 //
@@ -121,6 +124,7 @@ func NewProtocolManager(raftId uint16, raftPort uint16, blockchain *core.BlockCh
 		raftStorage:         etcdRaft.NewMemoryStorage(),
 		minter:              minter,
 		downloader:          downloader,
+		pc:					 p2p.NewPermissioningClient(),
 	}
 
 	if db, err := openQuorumRaftDb(quorumRaftDbLoc); err != nil {
@@ -128,6 +132,11 @@ func NewProtocolManager(raftId uint16, raftPort uint16, blockchain *core.BlockCh
 	} else {
 		manager.quorumRaftDb = db
 	}
+	
+	// DES: actively monitor permissioned nodes to see which have been 
+	// evicted, so that their connections may be terminated as soon as 
+	// possible.
+	go manager.monitorPermissions()
 
 	return manager, nil
 }
@@ -908,4 +917,32 @@ func (pm *ProtocolManager) LeaderAddress() (*Address, error) {
 	}
 	// We expect to reach this if pm.leader is 0, which is how etcd denotes the lack of a leader.
 	return nil, errors.New("no leader is currently elected")
+}
+
+
+// DES: actively monitor permissions to drop peers if they are no longer
+// permissioned, or add them if they have been permissioned.
+func (pm *ProtocolManager) monitorPermissions() {
+	log.Trace("Check peers for permission")
+	for {
+		time.Sleep(1 * time.Minute) // TODO: hardcoded for now
+		direction := "IN/OUT"
+		for raftId, peer := range pm.peers {
+			// remove node if no longer permissioned
+			if !pm.pc.IsNodePermissioned(peer.p2pNode.ID.String(), pm.address.nodeId.String(), pm.p2pServer.DataDir, direction) {
+				log.Trace("Peer no longer permissioned, will be removed", "peer", peer.p2pNode.ID)
+				if !pm.removedPeers.Has(raftId) {
+					pm.disconnectFromPeer(raftId, peer)
+					pm.removedPeers.Add(raftId)
+				}
+			} else {
+				if !pm.isP2pNodeInCluster(peer.p2pNode) {
+				// add node again if whitelisted
+				pm.addPeer(peer.address)
+				log.Trace("Propose addition of node is permissioned", "enode", peer.p2pNode.ID)
+				}
+
+			}
+		}
+	}
 }
